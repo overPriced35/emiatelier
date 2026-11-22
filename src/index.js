@@ -54,7 +54,8 @@ const rolePlan = [
   { name: "🌸・Senior Shrine Maiden", color: 0xE6A0B4, permissions: [
     PermissionFlagsBits.ManageGuild, PermissionFlagsBits.ManageChannels,
     PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ManageMessages,
-    PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.ViewAuditLog
+    PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.KickMembers,
+    PermissionFlagsBits.BanMembers, PermissionFlagsBits.ViewAuditLog
   ] },
   { name: "🦊・Shrine Maiden", color: 0xB69AD8, permissions: [
     PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ModerateMembers,
@@ -281,7 +282,17 @@ async function setupShrine(guild) {
   const channels = {};
   for (const info of channelPlan) {
     const readOnly = ["🌸・welcome", "📜・rules", "📢・announcements", "🎭・choose-roles"].includes(info.name);
-    channels[info.name] = await ensureChannel(guild, mainCategory, info, standardChannelPermissions(guild, readOnly ? "readOnly" : "chat"));
+    const overwrites = standardChannelPermissions(guild, readOnly ? "readOnly" : "chat");
+    if (info.name === "📢・announcements") {
+      for (const roleName of ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]) {
+        const staffRole = guild.roles.cache.find(role => role.name === roleName);
+        if (staffRole) overwrites.push({
+          id: staffRole.id,
+          allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.AttachFiles]
+        });
+      }
+    }
+    channels[info.name] = await ensureChannel(guild, mainCategory, info, overwrites);
   }
 
   const staffNames = ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"];
@@ -510,6 +521,9 @@ async function handleModerationCommand(interaction) {
     }
     if (command === "lock" || command === "unlock") {
       if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageChannels)) throw new Error("You need Manage Channels permission.");
+      if (command === "unlock" && ["🎀・cosplay-showcase", "🎨・art-gallery", "📸・photography", "🧵・crafting-corner"].includes(interaction.channel.name)) {
+        throw new Error("This is a role-gated gallery space. Use /setup to restore its intended posting permissions.");
+      }
       const everyone = interaction.guild.roles.everyone;
       await interaction.channel.permissionOverwrites.edit(everyone, {
         SendMessages: command === "unlock" ? null : false,
