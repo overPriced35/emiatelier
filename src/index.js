@@ -509,8 +509,8 @@ async function handleModerationCommand(interaction) {
     const message = interaction.options.getString("message") || "Thank you for sharing your creativity with Emi Atelier!";
     let parsed;
     try { parsed = new URL(link); } catch {}
-    if (!parsed || parsed.protocol !== "https:" || !["discord.com", "www.discord.com", "cdn.discordapp.com", "media.discordapp.net"].includes(parsed.hostname)) {
-      return interaction.reply({ content: "Please provide a valid HTTPS Discord message or media link.", flags: MessageFlags.Ephemeral });
+    if (!parsed || parsed.protocol !== "https:") {
+      return interaction.reply({ content: "Please provide a valid HTTPS link to the creator's work.", flags: MessageFlags.Ephemeral });
     }
     const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "🌟・creator-spotlights");
     if (!channel) return interaction.reply({ content: "The creator spotlight channel is not set up yet. Ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
