@@ -48,18 +48,41 @@ const rulesEmbed = () => new EmbedBuilder()
   .setFooter({ text: "Emi Atelier • thank you for being here ♡" });
 
 
+const startHereEmbed = () => new EmbedBuilder()
+  .setColor(pink)
+  .setTitle("୨୧ Your first steps at the shrine")
+  .setDescription(
+    "**01 — Read the guidelines**\\nVisit 📜・rules to learn how we keep the shrine welcoming.\\n\\n" +
+    "**02 — Introduce yourself**\\nSay hello in 🎀・introductions. Share only what you're comfortable sharing.\\n\\n" +
+    "**03 — Choose your interests**\\nVisit 🎭・choose-roles and select Cosplayer, Artist, Photographer, or Crafter. These roles unlock posting in their matching gallery spaces.\\n\\n" +
+    "**04 — Explore and join in**\\nBrowse the gallery, chat in 💬・general, and use 💬・gallery-chat to talk about creative posts.\\n\\n" +
+    "**05 — Need help?**\\nContact a member of the shrine staff. Never share passwords, private details, or sensitive personal information."
+  )
+  .setFooter({ text: "Emi Atelier • make yourself at home ♡" });
+
+const staffGuideEmbed = () => new EmbedBuilder()
+  .setColor(purple)
+  .setTitle("୨୧ Shrine Assistant — staff command guide")
+  .setDescription("Use commands responsibly. Add a clear, factual reason to every moderation action. Commands are limited by Discord role hierarchy and the bot's permissions.")
+  .addFields(
+    { name: "Warnings", value: "`/warn member reason` — record a warning\\n`/warnings member` — view warning history\\n`/clearwarnings member` — clear recorded warnings", inline: false },
+    { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\\n`/untimeout member reason` — remove a timeout\\n`/kick member reason` — remove a member\\n`/ban member reason` — ban a member", inline: false },
+    { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\\n`/lock reason` and `/unlock` — lock or restore the current channel\\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
+    { name: "Information", value: "`/userinfo member` — view basic member information\\n`/staffhelp` — show this guide", inline: false },
+    { name: "Staff expectations", value: "Keep reasons professional, do not share staff-only information, and escalate uncertain or serious cases to the Guuji. Never use moderation tools to settle personal disagreements.", inline: false }
+  )
+  .setFooter({ text: "Emi Atelier • internal staff reference" });
+
+
 const rolePlan = [
   // Staff roles are assigned manually to trusted people only.
   { name: "⛩️・Guuji", color: 0xE8A2C8, permissions: [PermissionFlagsBits.Administrator] },
   { name: "🌸・Senior Shrine Maiden", color: 0xE6A0B4, permissions: [
-    PermissionFlagsBits.ManageGuild, PermissionFlagsBits.ManageChannels,
-    PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ManageMessages,
-    PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.KickMembers,
-    PermissionFlagsBits.BanMembers, PermissionFlagsBits.ViewAuditLog
+    PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ModerateMembers,
+    PermissionFlagsBits.KickMembers, PermissionFlagsBits.ViewAuditLog
   ] },
   { name: "🦊・Shrine Maiden", color: 0xB69AD8, permissions: [
-    PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ModerateMembers,
-    PermissionFlagsBits.ViewAuditLog
+    PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ModerateMembers
   ] },
   { name: "🪷・Miko Apprentice", color: 0xD9B8E8, permissions: [] },
   { name: "🎀・Cosplayer", color: 0xF4B8CF, selfAssignable: true },
@@ -67,7 +90,6 @@ const rolePlan = [
   { name: "📸・Photographer", color: 0xB8C6E8, selfAssignable: true },
   { name: "🧵・Crafter", color: 0xD9B8A7, selfAssignable: true },
   { name: "✨・Shrine Visitor", color: 0xE9D6A5 },
-  { name: "🌱・New Arrival", color: 0xA9D8C8 },
   { name: "📢・Announcement Pings", color: 0xF1C7A8, mentionable: true, selfAssignable: true },
   { name: "🎉・Event Pings", color: 0xC8B6E8, mentionable: true, selfAssignable: true }
 ];
@@ -124,6 +146,7 @@ const selfRoleEmbed = () => new EmbedBuilder()
   .setFooter({ text: "Emi Atelier • choose what fits you ♡" });
 
 const channelPlan = [
+  { name: "🌱・start-here", topic: "New to the shrine? Start here for the welcome guide, rules, roles, and where to go next." },
   { name: "🌸・welcome", topic: "A warm welcome to the shrine." },
   { name: "📜・rules", topic: "Please read our community guidelines." },
   { name: "📢・announcements", topic: "Official Emi Atelier announcements." },
@@ -339,6 +362,7 @@ async function setupShrine(guild) {
   }, staffChannelPermissions(guild, ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]));
 
   const staffChannels = [
+    { name: "📖・staff-command-guide", topic: "Private reference for Shrine Assistant staff commands and moderation expectations.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden", "🪷・Miko Apprentice"] },
     { name: "🔒・guuji-office", topic: "Private office for the Guuji.", roles: ["⛩️・Guuji"] },
     { name: "🌸・senior-shrine-maiden", topic: "Private coordination for senior shrine staff.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden"] },
     { name: "🦊・shrine-maiden-office", topic: "Staff coordination for shrine maidens.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
@@ -350,8 +374,10 @@ async function setupShrine(guild) {
     );
   }
 
+  await ensureEmbed(channels["🌱・start-here"], "୨୧ Your first steps at the shrine", startHereEmbed());
   await ensureEmbed(channels["🌸・welcome"], "୨୧ Welcome to the shrine!", welcomeEmbed(guild));
   await ensureEmbed(channels["📜・rules"], "୨୧ Shrine guidelines", rulesEmbed());
+  await ensureEmbed(channels["📖・staff-command-guide"], "୨୧ Shrine Assistant — staff command guide", staffGuideEmbed());
   await ensureRolePanel(channels["🎭・choose-roles"]);
 
   const config = readConfig();
@@ -395,7 +421,8 @@ const moderationCommands = [
   new SlashCommandBuilder().setName("slowmode").setDescription("Set channel slowmode in seconds.")
     .addIntegerOption(o => o.setName("seconds").setDescription("0 to disable; maximum 21600").setMinValue(0).setMaxValue(21600).setRequired(true)),
   new SlashCommandBuilder().setName("userinfo").setDescription("View basic information about a server member.")
-    .addUserOption(o => o.setName("member").setDescription("Member to inspect").setRequired(false))
+    .addUserOption(o => o.setName("member").setDescription("Member to inspect").setRequired(false)),
+  new SlashCommandBuilder().setName("staffhelp").setDescription("Show the Shrine Assistant staff command guide.")
 ].map(command => command.toJSON());
 
 function getWarnings(config, guildId, userId) {
@@ -420,6 +447,13 @@ async function handleModerationCommand(interaction) {
   const guildData = config[interaction.guild.id] ||= {};
   guildData.warnings ||= {};
 
+  if (command === "staffhelp") {
+    if (!interaction.member.roles.cache.some(role => ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden", "🪷・Miko Apprentice"].includes(role.name))) {
+      return interaction.reply({ content: "This guide is for shrine staff only.", flags: MessageFlags.Ephemeral });
+    }
+    return interaction.reply({ embeds: [staffGuideEmbed()], flags: MessageFlags.Ephemeral });
+  }
+
   if (command === "userinfo") {
     const user = memberUser || interaction.user;
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
@@ -436,7 +470,7 @@ async function handleModerationCommand(interaction) {
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
-  if (command === "warn" || command === "warnings") {
+  if (command === "warn" || command === "warnings" || command === "clearwarnings") {
     if (!interaction.memberPermissions.has(PermissionFlagsBits.ModerateMembers)) {
       return interaction.reply({ content: "You need Moderate Members permission to use this command.", flags: MessageFlags.Ephemeral });
     }
