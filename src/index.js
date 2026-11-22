@@ -21,7 +21,11 @@ const readConfig = () => {
   try { return JSON.parse(fs.readFileSync(configPath, "utf8")); }
   catch { return {}; }
 };
-const writeConfig = (config) => fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+const writeConfig = (config) => {
+  const tempPath = configPath + ".tmp";
+  fs.writeFileSync(tempPath, JSON.stringify(config, null, 2));
+  fs.renameSync(tempPath, configPath);
+};
 const pink = 0xF4B8CF;
 const purple = 0xC9B6E4;
 
@@ -1349,7 +1353,17 @@ client.on("interactionCreate", async (interaction) => {
   }
 
   if (interaction.isChatInputCommand() && interaction.commandName !== "setup") {
-    await handleModerationCommand(interaction);
+    try {
+      await handleModerationCommand(interaction);
+    } catch (error) {
+      console.error("Command failed (" + interaction.commandName + "):", error);
+      const response = { content: "I couldn't complete that command just now. Please try again, and contact shrine staff if the problem continues.", flags: MessageFlags.Ephemeral };
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp(response).catch(() => {});
+      } else {
+        await interaction.reply(response).catch(() => {});
+      }
+    }
     return;
   }
 
