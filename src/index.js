@@ -64,7 +64,7 @@ const startHereEmbed = () => new EmbedBuilder()
   .setDescription(
     "**01 — Read the guidelines**\nVisit 📜・rules to learn how we keep the shrine welcoming.\n\n" +
     "**02 — Introduce yourself**\nSay hello in 🎀・introductions. Share only what you're comfortable sharing.\n\n" +
-    "**03 — Choose your interests**\nVisit 🎭・choose-roles and select Cosplayer, Artist, Photographer, or Crafter. These roles unlock posting in their matching gallery spaces.\n\n" +
+    "**03 — Your interests and roles**\nDiscord Onboarding lets you choose your creative interests and optional notifications when you join. You can change those choices later in 🎭・choose-roles.\n\n" +
     "**04 — Explore and join in**\nBrowse the gallery and 🎐・creative-prompts, chat in 💬・general, and use 💬・gallery-chat to talk about creative posts.\n\n" +
     "**05 — Make a creator profile**\nUse /profile-set to introduce your creative interests and work. Browse shared profiles with /creators, or view one with /profile-view. This is optional, and you can remove your profile at any time with /profile-clear.\n\n" +
     "**06 — Follow Emi's creative journey**\nVisit 📓・emi-updates for Emi Atelier project news and personal creative progress.\n\n" +
@@ -80,7 +80,7 @@ const staffGuideEmbed = () => new EmbedBuilder()
     { name: "Warnings", value: "`/warn member reason` — record a warning\n`/warnings member` — view warning history\n`/clearwarnings member` — clear recorded warnings", inline: false },
     { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\n`/untimeout member reason` — remove a timeout\n`/kick member reason` — remove a member\n`/ban member reason` — ban a member", inline: false },
     { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\n`/lock reason` and `/unlock` — lock or restore the current channel\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
-    { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event\n`/event-cancel` — cancel a scheduled event", inline: false },
+    { name: "Community features", value: "`/onboarding-setup` — configure native Discord newcomer onboarding\n`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event\n`/event-cancel` — cancel a scheduled event", inline: false },
     { name: "Community support", value: "`/bug-report` — privately report a bot or server issue\n`/feedback` — privately share feedback about the community or bot\n`/report` — privately contact staff about a concern", inline: false },
     { name: "Information", value: "`/userinfo member` — view basic member information\n`/staffhelp` — show this guide", inline: false },
     { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks and community event management.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
@@ -611,6 +611,8 @@ const moderationCommands = [
   new SlashCommandBuilder().setName("profile-clear").setDescription("Delete your creator profile."),
   new SlashCommandBuilder().setName("creators").setDescription("Browse members who have shared a creator profile.")
     .addIntegerOption(o => o.setName("page").setDescription("Page of creator profiles to view").setMinValue(1).setMaxValue(1000).setRequired(false)),
+  new SlashCommandBuilder().setName("onboarding-setup").setDescription("Configure Discord native newcomer onboarding.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
   new SlashCommandBuilder().setName("spotlight").setDescription("Celebrate a community member's creative work (staff only).")
     .addUserOption(o => o.setName("member").setDescription("Creator to feature").setRequired(true))
     .addStringOption(o => o.setName("category").setDescription("Type of creative work").setRequired(true)
@@ -646,6 +648,97 @@ async function handleModerationCommand(interaction) {
   const config = readConfig();
   const guildData = config[interaction.guild.id] ||= {};
   guildData.warnings ||= {};
+
+
+  if (command === "onboarding-setup") {
+    const callerPermissions = interaction.memberPermissions;
+    if (!callerPermissions?.has(PermissionFlagsBits.ManageGuild) || !callerPermissions?.has(PermissionFlagsBits.ManageRoles)) {
+      return interaction.reply({ content: "You need both Manage Server and Manage Roles permissions to configure Discord Onboarding.", flags: MessageFlags.Ephemeral });
+    }
+    const botMember = await interaction.guild.members.fetch(client.user.id);
+    if (!botMember.permissions.has(PermissionFlagsBits.ManageGuild) || !botMember.permissions.has(PermissionFlagsBits.ManageRoles)) {
+      return interaction.reply({ content: "Shrine Assistant needs both Manage Server and Manage Roles permissions. Grant those permissions to the bot, then try again.", flags: MessageFlags.Ephemeral });
+    }
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    try {
+      const guild = interaction.guild;
+      await guild.channels.fetch();
+      await guild.roles.fetch();
+      const channelNames = [
+        "🌱・start-here", "📜・rules", "💬・general",
+        "🎀・introductions", "🎭・choose-roles", "🤖・bot-commands", "💬・gallery-chat"
+      ];
+      const defaultChannels = channelNames.map(name =>
+        guild.channels.cache.find(channel => channel.type === ChannelType.GuildText && channel.name === name)
+      );
+      const roleNames = [
+        "🎀・Cosplayer", "🎨・Artist", "📸・Photographer", "🧵・Crafter",
+        "📢・Announcement Pings", "🎉・Event Pings"
+      ];
+      const roles = Object.fromEntries(roleNames.map(name => [
+        name, guild.roles.cache.find(role => role.name === name)
+      ]));
+      const missingChannels = channelNames.filter((name, index) => !defaultChannels[index]);
+      const missingRoles = roleNames.filter(name => !roles[name]);
+      if (missingChannels.length || missingRoles.length) {
+        const missing = [...missingChannels, ...missingRoles].join(", ");
+        return interaction.editReply("I couldn't configure onboarding because these planned items are missing: " + missing + ". Run /setup → Update first, then try again.");
+      }
+      const writableDefaults = defaultChannels.filter(channel =>
+        channel.permissionsFor(guild.roles.everyone)?.has(PermissionFlagsBits.SendMessages)
+      );
+      if (defaultChannels.length < 7 || writableDefaults.length < 5) {
+        return interaction.editReply("Discord requires at least 7 default onboarding channels, with at least 5 allowing @everyone to send messages. The current channel permissions do not meet that requirement.");
+      }
+      const cosplay = guild.channels.cache.find(channel => channel.name === "🎀・cosplay-showcase");
+      const art = guild.channels.cache.find(channel => channel.name === "🎨・art-gallery");
+      const photography = guild.channels.cache.find(channel => channel.name === "📸・photography");
+      const crafting = guild.channels.cache.find(channel => channel.name === "🧵・crafting-corner");
+      if (!cosplay || !art || !photography || !crafting) {
+        return interaction.editReply("One or more creator gallery channels are missing. Run /setup → Update first, then try again.");
+      }
+      const general = guild.channels.cache.find(channel => channel.name === "💬・general");
+      const prompts = [
+        {
+          title: "What do you enjoy creating?",
+          type: 0,
+          singleSelect: false,
+          required: false,
+          inOnboarding: true,
+          options: [
+            { title: "Cosplay", description: "Costumes, characters, and creative builds", emoji: "🎀", roles: [roles["🎀・Cosplayer"].id], channels: [cosplay.id] },
+            { title: "Art", description: "Illustration, drawing, and design", emoji: "🎨", roles: [roles["🎨・Artist"].id], channels: [art.id] },
+            { title: "Photography", description: "Portraits, events, and creative photography", emoji: "📸", roles: [roles["📸・Photographer"].id], channels: [photography.id] },
+            { title: "Crafting", description: "Props, sewing, making, and handmade projects", emoji: "🧵", roles: [roles["🧵・Crafter"].id], channels: [crafting.id] },
+            { title: "Just exploring", description: "I'm here to meet people and see what inspires me", emoji: "🌸", channels: [general.id] }
+          ]
+        },
+        {
+          title: "Which optional updates would you like?",
+          type: 0,
+          singleSelect: false,
+          required: false,
+          inOnboarding: true,
+          options: [
+            { title: "Announcements", description: "News and important community updates", emoji: "📢", roles: [roles["📢・Announcement Pings"].id] },
+            { title: "Community events", description: "Get notified about events and activities", emoji: "🎉", roles: [roles["🎉・Event Pings"].id] }
+          ]
+        }
+      ];
+      await guild.editOnboarding({
+        enabled: true,
+        mode: 0,
+        defaultChannels: defaultChannels.map(channel => channel.id),
+        prompts,
+        reason: "Configure Atelier de Emi native Discord onboarding"
+      });
+      await sendModerationLog(guild, "୨୧ Discord onboarding configured", "**Configured by:** " + interaction.user.toString() + "\n**Default channels:** " + defaultChannels.length + "\n**Prompts:** " + prompts.length);
+      return interaction.editReply("୨୧ **Discord Onboarding is configured!** New members will be welcomed through Discord's native flow, where they can choose creative interests, matching gallery access, and optional announcement/event notifications. The seven default channels are set, and 🎭・choose-roles remains available for changing preferences later.");
+    } catch (error) {
+      console.error("Discord onboarding setup failed:", error);
+      return interaction.editReply("I couldn't finish configuring Discord Onboarding: " + error.message + ". Check that Shrine Assistant has Manage Server and Manage Roles permissions, then try again.");
+    }
+  }
 
   if (command === "prompt") {
     if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageMessages)) {
