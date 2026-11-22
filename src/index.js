@@ -155,7 +155,8 @@ const channelPlan = [
   { name: "🎀・introductions", topic: "Tell the community a little about yourself." },
   { name: "🎭・choose-roles", topic: "Choose your own community and notification roles." },
   { name: "🤖・bot-commands", topic: "A home for Shrine Assistant commands and helpful tools." },
-  { name: "💡・suggestions", topic: "Community ideas submitted through /suggest." }
+  { name: "💡・suggestions", topic: "Community ideas submitted through /suggest." },
+  { name: "🌟・creator-spotlights", topic: "Community members and their creative work, celebrated by the Emi Atelier team." }
 ];
 
 async function ensureCategory(guild, name, permissionOverwrites) {
@@ -325,9 +326,9 @@ async function setupShrine(guild) {
 
   const channels = {};
   for (const info of channelPlan) {
-    const readOnly = ["🌸・welcome", "📜・rules", "📢・announcements", "🎭・choose-roles"].includes(info.name);
+    const readOnly = ["🌸・welcome", "📜・rules", "📢・announcements", "🎭・choose-roles", "🌟・creator-spotlights"].includes(info.name);
     const overwrites = standardChannelPermissions(guild, readOnly ? "readOnly" : "chat");
-    if (info.name === "📢・announcements") {
+    if (["📢・announcements", "🌟・creator-spotlights"].includes(info.name)) {
       for (const roleName of ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]) {
         const staffRole = guild.roles.cache.find(role => role.name === roleName);
         if (staffRole) overwrites.push({
@@ -461,7 +462,19 @@ const moderationCommands = [
     .addIntegerOption(o => o.setName("duration").setDescription("Duration in minutes (15–1440)").setMinValue(15).setMaxValue(1440).setRequired(true))
     .addStringOption(o => o.setName("location").setDescription("Where the event takes place (online or venue)").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("description").setDescription("What members can expect").setMaxLength(1000).setRequired(false)),
-  new SlashCommandBuilder().setName("events").setDescription("See upcoming Emi Atelier community events.")
+  new SlashCommandBuilder().setName("events").setDescription("See upcoming Emi Atelier community events."),
+  new SlashCommandBuilder().setName("spotlight").setDescription("Celebrate a community member's creative work (staff only).")
+    .addUserOption(o => o.setName("member").setDescription("Creator to feature").setRequired(true))
+    .addStringOption(o => o.setName("category").setDescription("Type of creative work").setRequired(true)
+      .addChoices(
+        { name: "Cosplay", value: "Cosplay" },
+        { name: "Art", value: "Art" },
+        { name: "Photography", value: "Photography" },
+        { name: "Crafting", value: "Crafting" },
+        { name: "Other creativity", value: "Other creativity" }
+      ))
+    .addStringOption(o => o.setName("link").setDescription("Link to the creator's work").setMaxLength(500).setRequired(true))
+    .addStringOption(o => o.setName("message").setDescription("A short note about the work or creator").setMaxLength(500).setRequired(false))
 ].map(command => command.toJSON());
 
 function getWarnings(config, guildId, userId) {
@@ -485,6 +498,35 @@ async function handleModerationCommand(interaction) {
   const config = readConfig();
   const guildData = config[interaction.guild.id] ||= {};
   guildData.warnings ||= {};
+
+  if (command === "spotlight") {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageMessages)) {
+      return interaction.reply({ content: "Only shrine staff can publish creator spotlights.", flags: MessageFlags.Ephemeral });
+    }
+    const creator = interaction.options.getUser("member", true);
+    const category = interaction.options.getString("category", true);
+    const link = interaction.options.getString("link", true);
+    const message = interaction.options.getString("message") || "Thank you for sharing your creativity with Emi Atelier!";
+    let parsed;
+    try { parsed = new URL(link); } catch {}
+    if (!parsed || parsed.protocol !== "https:" || !["discord.com", "www.discord.com", "cdn.discordapp.com", "media.discordapp.net"].includes(parsed.hostname)) {
+      return interaction.reply({ content: "Please provide a valid HTTPS Discord message or media link.", flags: MessageFlags.Ephemeral });
+    }
+    const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "🌟・creator-spotlights");
+    if (!channel) return interaction.reply({ content: "The creator spotlight channel is not set up yet. Ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Creator spotlight: " + creator.username)
+      .setDescription(message)
+      .addFields(
+        { name: "Featured creator", value: creator.toString(), inline: true },
+        { name: "Creative corner", value: category, inline: true },
+        { name: "View their work", value: "[Open featured work](" + link + ")" }
+      )
+      .setThumbnail(creator.displayAvatarURL({ size: 256 }))
+      .setFooter({ text: "Emi Atelier • celebrating the creativity in our community ♡" })
+      .setTimestamp();
+    await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
+    return interaction.reply({ content: "୨୧ Spotlight published in 🌟・creator-spotlights!", flags: MessageFlags.Ephemeral });
+  }
 
   if (command === "event-create") {
     if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageEvents)) {
