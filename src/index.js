@@ -158,7 +158,7 @@ const channelPlan = [
   { name: "🎀・introductions", topic: "Tell the community a little about yourself." },
   { name: "🎭・choose-roles", topic: "Choose your own community and notification roles." },
   { name: "🤖・bot-commands", topic: "A home for Shrine Assistant commands and helpful tools." },
-  { name: "💡・suggestions", topic: "Community ideas submitted through /suggest." },
+  { name: "💡・suggestions", topic: "Community ideas submitted through /suggest. React with 👍 to support an idea or 👎 if it is not a fit." },
   { name: "🌟・creator-spotlights", topic: "Community members and their creative work, celebrated by Emi Atelier and the Atelier de Emi team." },
   { name: "🎐・creative-prompts", topic: "Creative challenges and inspiration from Emi Atelier. Join in at your own pace and share your work in the gallery." },
   { name: "📓・emi-updates", topic: "Updates from Emi Atelier: personal cosplay projects, creative progress, plans and announcements from Emi." }
@@ -788,8 +788,10 @@ async function handleModerationCommand(interaction) {
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Community suggestion")
       .setDescription(idea).addFields({ name: "Submitted by", value: interaction.user.toString() })
       .setFooter({ text: "Atelier de Emi • thank you for helping the community grow ♡" }).setTimestamp();
-    await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
-    return interaction.reply({ content: "Thank you! Your idea has been shared in 💡・suggestions.", flags: MessageFlags.Ephemeral });
+    const suggestionMessage = await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
+    await suggestionMessage.react("👍").catch(() => {});
+    await suggestionMessage.react("👎").catch(() => {});
+    return interaction.reply({ content: "Thank you! Your idea has been shared in 💡・suggestions. Members can react with 👍 or 👎 to give feedback.", flags: MessageFlags.Ephemeral });
   }
 
   if (command === "report") {
