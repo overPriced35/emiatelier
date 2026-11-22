@@ -64,23 +64,9 @@ const startHereEmbed = () => new EmbedBuilder()
     "**04 — Explore and join in**\nBrowse the gallery and 🎐・creative-prompts, chat in 💬・general, and use 💬・gallery-chat to talk about creative posts.\n\n" +
     "**05 — Make a creator profile**\nUse /profile-set to introduce your creative interests and work. Browse shared profiles with /creators, or view one with /profile-view. This is optional, and you can remove your profile at any time with /profile-clear.\n\n" +
     "**06 — Follow Emi's creative journey**\nVisit 📓・emi-updates for Emi Atelier project news and personal creative progress.\n\n" +
-    "**07 — Share an idea or need help?**\nUse /suggest to share a community idea, or /report to contact staff privately. You can also ask a shrine staff member for help. Never share passwords or sensitive personal information.\n\n**🧪 Helping test the shrine?**\nUse /tester-start for the checklist, /bug-report to report something broken, or /feedback to tell us what feels great and what could be improved. Visit 🧪・tester-guide and 🧪・tester-lounge too. Submissions go privately to the staff team.\n\n**A little note**\nAtelier de Emi is Emi's creative space, with a look and atmosphere inspired by Yae Miko and the Grand Narukami Shrine. Emi's projects and creative journey are part of its identity, while every member is encouraged to share their own work and interests. You do not need to know Genshin Impact to belong here."
+    "**07 — Share an idea or need help?**\nUse /suggest to share a community idea, or /report to contact staff privately. You can also ask a shrine staff member for help. Never share passwords or sensitive personal information.\n\n**Help shape the community**\nUse /suggest to share an idea, /feedback to tell us what is working or could be better, or /bug-report to let the shrine team know when something is broken. Submissions go privately to staff.\n\n**A little note**\nAtelier de Emi is Emi's creative space, with a look and atmosphere inspired by Yae Miko and the Grand Narukami Shrine. Emi's projects and creative journey are part of its identity, while every member is encouraged to share their own work and interests. You do not need to know Genshin Impact to belong here."
   )
   .setFooter({ text: "Atelier de Emi • make yourself at home ♡" });
-
-const testerGuideEmbed = () => new EmbedBuilder()
-  .setColor(purple)
-  .setTitle("୨୧ Shrine tester field guide")
-  .setDescription("Thank you for helping us prepare Atelier de Emi! Explore, try things out naturally, and tell us what feels confusing, broken, or delightful. You do not need to find something wrong to be a helpful tester.")
-  .addFields(
-    { name: "01 — Find your way around", value: "Read 📜・rules and 🌱・start-here. Check that the channel names and descriptions make sense." },
-    { name: "02 — Try the community basics", value: "Introduce yourself, choose your interest roles in 🎭・choose-roles, and check that the matching gallery areas behave as described." },
-    { name: "03 — Try Shrine Assistant", value: "Use /help, /serverinfo, /profile-set, /profile-view, /suggest and /events. Do not test moderation commands on real members." },
-    { name: "04 — Report what you find", value: "Use /bug-report for something broken. Include the area, what happened, what you expected, and steps to reproduce it if possible. Use /feedback for general impressions and ideas." },
-    { name: "05 — Talk with the team", value: "Use 🧪・tester-lounge for tester discussion. Private reports go to 🧪・tester-feedback for staff review." },
-    { name: "Safety notes", value: "Never share passwords or private personal information. Avoid mass-pinging members or trying destructive setup/reset actions. Tell staff before testing anything that could affect others." }
-  )
-  .setFooter({ text: "Atelier de Emi • thank you for helping us make the shrine better ♡" });
 
 const staffGuideEmbed = () => new EmbedBuilder()
   .setColor(purple)
@@ -91,10 +77,10 @@ const staffGuideEmbed = () => new EmbedBuilder()
     { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\n`/untimeout member reason` — remove a timeout\n`/kick member reason` — remove a member\n`/ban member reason` — ban a member", inline: false },
     { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\n`/lock reason` and `/unlock` — lock or restore the current channel\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
     { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event", inline: false },
-    { name: "Tester support", value: "`/bug-report` — privately report a bot or server issue\n`/feedback` — privately share tester feedback or an idea\n`/tester-start` — show the tester checklist", inline: false },
+    { name: "Community support", value: "`/bug-report` — privately report a bot or server issue\n`/feedback` — privately share feedback about the community or bot\n`/report` — privately contact staff about a concern", inline: false },
     { name: "Information", value: "`/userinfo member` — view basic member information\n`/staffhelp` — show this guide", inline: false },
     { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
-    { name: "Tester workflow", value: "Review submissions in 🧪・tester-feedback. Thank testers, reproduce issues where possible, record what happened and what changed, and keep private reports within staff. Assign the 🧪・Shrine Tester role manually to invited testers; it unlocks 🧪・tester-lounge.", inline: false },
+    { name: "Community feedback workflow", value: "Review bug reports and feedback in 🛠️・community-feedback. Acknowledge useful reports, reproduce issues where possible, record what happened and what changed, and keep private submissions within staff.", inline: false },
     { name: "Staff expectations", value: "Keep reasons professional, do not share staff-only information, and escalate uncertain or serious cases to the Guuji. Never use moderation tools to settle personal disagreements.", inline: false }
   )
   .setFooter({ text: "Atelier de Emi • internal staff reference" });
@@ -118,7 +104,6 @@ const rolePlan = [
   { name: "✨・Shrine Visitor", color: 0xE9D6A5 },
   { name: "📢・Announcement Pings", color: 0xF1C7A8, mentionable: true, selfAssignable: true },
   { name: "🎉・Event Pings", color: 0xC8B6E8, mentionable: true, selfAssignable: true },
-  { name: "🧪・Shrine Tester", color: 0xA9C7D8 }
 ];
 
 const selfRoleButtons = [
@@ -182,7 +167,6 @@ const channelPlan = [
   { name: "🎭・choose-roles", topic: "Choose your own community and notification roles." },
   { name: "🤖・bot-commands", topic: "A home for Shrine Assistant commands and helpful tools." },
   { name: "💡・suggestions", topic: "Community ideas submitted through /suggest. React with 👍 to support an idea or 👎 if it is not a fit." },
-  { name: "🧪・tester-guide", topic: "A friendly guide and checklist for invited Shrine Assistant testers." },
   { name: "🌟・creator-spotlights", topic: "Community members and their creative work, celebrated by Emi Atelier and the Atelier de Emi team." },
   { name: "🎐・creative-prompts", topic: "Creative challenges and inspiration from Emi Atelier. Join in at your own pace and share your work in the gallery." },
   { name: "📓・emi-updates", topic: "Updates from Emi Atelier: personal cosplay projects, creative progress, plans and announcements from Emi." }
@@ -340,6 +324,13 @@ async function ensureEmbed(channel, title, embed) {
 async function setupShrine(guild) {
   await guild.channels.fetch();
   await guild.roles.fetch();
+  // Remove the retired private beta spaces and role during an ordinary setup update.
+  for (const legacyName of ["🧪・tester-guide", "🧪・tester-lounge", "🧪・tester-feedback"]) {
+    const legacy = guild.channels.cache.find(item => item.name === legacyName);
+    if (legacy) await legacy.delete("Retiring the separate tester programme");
+  }
+  const legacyTesterRole = guild.roles.cache.find(role => role.name === "🧪・Shrine Tester");
+  if (legacyTesterRole && legacyTesterRole.editable) await legacyTesterRole.delete("Retiring the separate tester programme");
 
   const mainCategory = await ensureCategory(guild, "⛩️・THE SHRINE");
   const communityCategory = await ensureCategory(guild, "🏮・COMMUNITY HALL");
@@ -365,12 +356,12 @@ async function setupShrine(guild) {
   })));
 
   const channels = {};
-  const communityChannels = ["💬・general", "🎀・introductions", "🤖・bot-commands", "🧪・tester-guide"];
+  const communityChannels = ["💬・general", "🎀・introductions", "🤖・bot-commands"];
   const creatorChannels = ["🌟・creator-spotlights", "🎐・creative-prompts", "📓・emi-updates"];
   for (const info of channelPlan) {
     const category = communityChannels.includes(info.name) ? communityCategory
       : creatorChannels.includes(info.name) ? creatorCategory : mainCategory;
-    const readOnly = ["🌸・welcome", "📜・rules", "📢・announcements", "🎭・choose-roles", "🧪・tester-guide", ...creatorChannels].includes(info.name);
+    const readOnly = ["🌸・welcome", "📜・rules", "📢・announcements", "🎭・choose-roles", ...creatorChannels].includes(info.name);
     const overwrites = standardChannelPermissions(guild, readOnly ? "readOnly" : "chat");
     if (["📢・announcements", ...creatorChannels].includes(info.name)) {
       for (const roleName of ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]) {
@@ -425,12 +416,6 @@ async function setupShrine(guild) {
   }, staffReadOnlyPermissions(guild, ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]));
 
   channels["💡・suggestions"] = await ensureChannel(guild, communityCategory, { name: "💡・suggestions", topic: "Community ideas submitted through /suggest. React with 👍 to support an idea or 👎 if it is not a fit." }, standardChannelPermissions(guild, "readOnly"));
-  const testerAccess = [{ id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] }, { id: client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages] }];
-  for (const roleName of ["🧪・Shrine Tester", "⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]) {
-    const role = guild.roles.cache.find(item => item.name === roleName);
-    if (role) testerAccess.push({ id: role.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles] });
-  }
-  channels["🧪・tester-lounge"] = await ensureChannel(guild, communityCategory, { name: "🧪・tester-lounge", topic: "A private space for invited Shrine Assistant testers to coordinate and compare notes." }, testerAccess);
   channels["💬・gallery-chat"] = await ensureChannel(guild, galleryCategory, {
     name: "💬・gallery-chat",
     topic: "Chat about gallery posts, share ideas, and give creators encouragement."
@@ -439,7 +424,7 @@ async function setupShrine(guild) {
   const staffChannels = [
     { name: "📖・staff-command-guide", topic: "Private reference for Shrine Assistant staff commands and moderation expectations.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden", "🪷・Miko Apprentice"] },
     { name: "📨・member-reports", topic: "Private reports and support requests submitted to Shrine Assistant.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
-    { name: "🧪・tester-feedback", topic: "Private tester bug reports and feedback for Shrine Assistant and Atelier de Emi.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
+    { name: "🛠️・community-feedback", topic: "Private bug reports and community feedback submitted through Shrine Assistant.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
     { name: "🔒・guuji-office", topic: "Private office for the Guuji.", roles: ["⛩️・Guuji"] },
     { name: "🌸・senior-shrine-maiden", topic: "Private coordination for senior shrine staff.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden"] },
     { name: "🦊・shrine-maiden-office", topic: "Staff coordination for shrine maidens.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
@@ -453,7 +438,6 @@ async function setupShrine(guild) {
   }
 
   await ensureEmbed(channels["🌱・start-here"], "୨୧ Your first steps at the shrine", startHereEmbed());
-  await ensureEmbed(channels["🧪・tester-guide"], "୨୧ Shrine tester field guide", testerGuideEmbed());
   await ensureEmbed(channels["🌸・welcome"], "୨୧ Welcome to the shrine!", welcomeEmbed(guild));
   await ensureEmbed(channels["🎀・introductions"], "୨୧ A little introduction", introductionEmbed());
   await ensureEmbed(channels["📜・rules"], "୨୧ Shrine guidelines", rulesEmbed());
@@ -516,7 +500,7 @@ const moderationCommands = [
     .addStringOption(o => o.setName("area").setDescription("Where did it happen? e.g. /setup, roles, welcome").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("details").setDescription("What happened, and what did you expect?").setMaxLength(1500).setRequired(true))
     .addStringOption(o => o.setName("steps").setDescription("Optional steps to reproduce the issue").setMaxLength(1000).setRequired(false))
-    .addStringOption(o => o.setName("severity").setDescription("How much does this affect testing?").addChoices(
+    .addStringOption(o => o.setName("severity").setDescription("How much does this affect the experience?").addChoices(
       { name: "Low — minor issue", value: "Low" },
       { name: "Normal — feature partly affected", value: "Normal" },
       { name: "High — blocks testing", value: "High" }
@@ -524,7 +508,6 @@ const moderationCommands = [
   new SlashCommandBuilder().setName("feedback").setDescription("Privately share feedback about the server or bot.")
     .addStringOption(o => o.setName("topic").setDescription("What is your feedback about?").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("details").setDescription("What works well, or what could be better?").setMaxLength(1500).setRequired(true)),
-  new SlashCommandBuilder().setName("tester-start").setDescription("Show the Shrine Assistant tester checklist."),
   new SlashCommandBuilder().setName("icebreaker").setDescription("Share a fun conversation starter in the community."),
   new SlashCommandBuilder().setName("event-create").setDescription("Create a community event (staff only).")
     .addStringOption(o => o.setName("title").setDescription("Name of the event").setMaxLength(100).setRequired(true))
@@ -904,13 +887,9 @@ async function handleModerationCommand(interaction) {
     return interaction.reply({ content: "A conversation starter has been posted in 💬・general!", flags: MessageFlags.Ephemeral });
   }
 
-  if (command === "tester-start") {
-    return interaction.reply({ embeds: [testerGuideEmbed()], flags: MessageFlags.Ephemeral });
-  }
-
   if (command === "bug-report" || command === "feedback") {
-    const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "🧪・tester-feedback");
-    if (!channel) return interaction.reply({ content: "The private tester-feedback channel is not set up yet. Please ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
+    const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "🛠️・community-feedback");
+    if (!channel) return interaction.reply({ content: "The private community-feedback channel is not set up yet. Please ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
     let embed;
     if (command === "bug-report") {
       const area = interaction.options.getString("area", true);
@@ -919,11 +898,11 @@ async function handleModerationCommand(interaction) {
       const severity = interaction.options.getString("severity", true);
       embed = new EmbedBuilder()
         .setColor(severity === "High" ? 0xD98B8B : severity === "Normal" ? 0xE9D6A5 : purple)
-        .setTitle("୨୧ Tester bug report")
+        .setTitle("୨୧ Shrine Assistant issue report")
         .setDescription(details)
         .addFields(
           { name: "Area", value: area, inline: true },
-          { name: "Severity", value: severity, inline: true },
+          { name: "Impact", value: severity, inline: true },
           { name: "Submitted by", value: interaction.user.tag + " (" + interaction.user.id + ")" }
         )
         .setTimestamp();
@@ -933,7 +912,7 @@ async function handleModerationCommand(interaction) {
       const details = interaction.options.getString("details", true);
       embed = new EmbedBuilder()
         .setColor(pink)
-        .setTitle("୨୧ Tester feedback: " + topic)
+        .setTitle("୨୧ Community feedback: " + topic)
         .setDescription(details)
         .addFields({ name: "Submitted by", value: interaction.user.tag + " (" + interaction.user.id + ")" })
         .setTimestamp();
