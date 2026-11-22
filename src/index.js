@@ -76,10 +76,10 @@ const staffGuideEmbed = () => new EmbedBuilder()
     { name: "Warnings", value: "`/warn member reason` — record a warning\n`/warnings member` — view warning history\n`/clearwarnings member` — clear recorded warnings", inline: false },
     { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\n`/untimeout member reason` — remove a timeout\n`/kick member reason` — remove a member\n`/ban member reason` — ban a member", inline: false },
     { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\n`/lock reason` and `/unlock` — lock or restore the current channel\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
-    { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event\n`/event-cancel` — cancel a scheduled event", inline: false },
+    { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event\\n`/event-cancel` — cancel a scheduled event\n`/event-cancel` — cancel a scheduled event", inline: false },
     { name: "Community support", value: "`/bug-report` — privately report a bot or server issue\n`/feedback` — privately share feedback about the community or bot\n`/report` — privately contact staff about a concern", inline: false },
     { name: "Information", value: "`/userinfo member` — view basic member information\n`/staffhelp` — show this guide", inline: false },
-    { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
+    { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks and community event management.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
     { name: "Community feedback workflow", value: "Review bug reports and feedback in 🛠️・community-feedback. Acknowledge useful reports, reproduce issues where possible, record what happened and what changed, and keep private submissions within staff.", inline: false },
     { name: "Support conversations", value: "Members can open private tickets in 🆘・contact-staff. Use Claim conversation to take ownership, keep replies in the private channel, and use Close conversation when resolved. Closed conversations remain read-only for the member and are recorded in moderation logs.", inline: false },
     { name: "Staff expectations", value: "Keep reasons professional, do not share staff-only information, and escalate uncertain or serious cases to the Guuji. Never use moderation tools to settle personal disagreements.", inline: false }
@@ -663,8 +663,8 @@ async function handleModerationCommand(interaction) {
   }
 
   if (command === "emi-update") {
-    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
-      return interaction.reply({ content: "Only the Atelier de Emi owner can publish creator updates.", flags: MessageFlags.Ephemeral });
+    if (interaction.user.id !== interaction.guild.ownerId) {
+      return interaction.reply({ content: "Only the server owner can publish official Emi Atelier creator updates.", flags: MessageFlags.Ephemeral });
     }
     const title = interaction.options.getString("title", true);
     const update = interaction.options.getString("update", true);
