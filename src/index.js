@@ -132,19 +132,93 @@ const channelPlan = [
   { name: "🤖・bot-commands", topic: "A home for bot commands." }
 ];
 
-async function ensureChannel(guild, category, info) {
+async function ensureCategory(guild, name, permissionOverwrites) {
+  let category = guild.channels.cache.find(
+    (item) => item.type === ChannelType.GuildCategory && item.name === name
+  );
+  if (!category) {
+    category = await guild.channels.create({
+      name, type: ChannelType.GuildCategory,
+      permissionOverwrites: permissionOverwrites || []
+    });
+  } else if (permissionOverwrites) {
+    await category.permissionOverwrites.set(permissionOverwrites);
+  }
+  return category;
+}
+
+async function ensureChannel(guild, category, info, permissionOverwrites) {
   let channel = guild.channels.cache.find(
     (item) => item.type === ChannelType.GuildText && item.name === info.name
   );
   if (!channel) {
     channel = await guild.channels.create({
       name: info.name, type: ChannelType.GuildText,
-      parent: category.id, topic: info.topic
+      parent: category.id, topic: info.topic,
+      permissionOverwrites: permissionOverwrites || []
     });
-  } else if (channel.parentId !== category.id) {
-    await channel.setParent(category.id);
+  } else {
+    if (channel.parentId !== category.id) await channel.setParent(category.id);
+    if (permissionOverwrites) await channel.permissionOverwrites.set(permissionOverwrites);
+    if (info.topic) await channel.setTopic(info.topic);
   }
   return channel;
+}
+
+async function ensureForumChannel(guild, category, info, permissionOverwrites) {
+  let channel = guild.channels.cache.find(
+    (item) => item.type === ChannelType.GuildForum && item.name === info.name
+  );
+  const options = {
+    name: info.name, type: ChannelType.GuildForum, parent: category.id,
+    topic: info.topic, permissionOverwrites,
+    availableTags: info.tags.map((name) => ({ name, moderated: false }))
+  };
+  if (!channel) {
+    channel = await guild.channels.create(options);
+  } else {
+    if (channel.parentId !== category.id) await channel.setParent(category.id);
+    await channel.edit({ topic: info.topic, availableTags: options.availableTags });
+    await channel.permissionOverwrites.set(permissionOverwrites);
+  }
+  return channel;
+}
+
+function galleryPermissions(guild, postingRole, staffRoles) {
+  const overwrites = [{
+    id: guild.roles.everyone.id,
+    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AddReactions],
+    deny: [PermissionFlagsBits.SendMessages, PermissionFlagsBits.CreatePublicThreads, PermissionFlagsBits.CreatePrivateThreads]
+  }, {
+    id: client.user.id,
+    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.ManageMessages]
+  }];
+  for (const roleName of [postingRole, ...staffRoles]) {
+    const role = guild.roles.cache.find((item) => item.name === roleName);
+    if (role) overwrites.push({
+      id: role.id,
+      allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AddReactions, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles]
+    });
+  }
+  return overwrites;
+}
+
+function staffChannelPermissions(guild, allowedRoleNames) {
+  const overwrites = [{
+    id: guild.roles.everyone.id,
+    deny: [PermissionFlagsBits.ViewChannel]
+  }, {
+    id: client.user.id,
+    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages]
+  }];
+  for (const roleName of allowedRoleNames) {
+    const role = guild.roles.cache.find((item) => item.name === roleName);
+    if (role) overwrites.push({
+      id: role.id,
+      allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles]
+    });
+  }
+  return overwrites;
 }
 
 async function ensureRolePanel(channel) {
@@ -172,37 +246,89 @@ async function ensureEmbed(channel, title, embed) {
 
 async function setupShrine(guild) {
   await guild.channels.fetch();
-  let category = guild.channels.cache.find((channel) =>
-    channel.type === ChannelType.GuildCategory && channel.name === "⛩️・THE SHRINE"
-  );
-  if (!category) {
-    category = await guild.channels.create({
-      name: "⛩️・THE SHRINE", type: ChannelType.GuildCategory
-    });
-  }
-
   await guild.roles.fetch();
-  for (const info of rolePlan) {
-    await ensureRole(guild, info);
-  }
+
+  const mainCategory = await ensureCategory(guild, "⛩️・THE SHRINE");
+  const galleryCategory = await ensureCategory(guild, "🌸・COMMUNITY GALLERY");
+  const staffCategory = await ensureCategory(guild, "⛩️・SHRINE STAFF", [{
+    id: guild.roles.everyone.id,
+    deny: [PermissionFlagsBits.ViewChannel]
+  }, {
+    id: client.user.id,
+    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages]
+  }]);
+
+  for (const info of rolePlan) await ensureRole(guild, info);
 
   const channels = {};
   for (const info of channelPlan) {
-    channels[info.name] = await ensureChannel(guild, category, info);
+    channels[info.name] = await ensureChannel(guild, mainCategory, info);
   }
+
+  const staffNames = ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"];
+  const forumChannels = [
+    {
+      name: "🎀・cosplay-showcase",
+      topic: "Share finished cosplays, progress, and costume reveals.",
+      postingRole: "🎀・Cosplayer",
+      tags: ["Finished Cosplay", "Work in Progress", "Help Needed", "Convention Photos"]
+    },
+    {
+      name: "🎨・art-gallery",
+      topic: "Share illustrations, sketches, designs, and other artwork.",
+      postingRole: "🎨・Artist",
+      tags: ["Finished Artwork", "Work in Progress", "Sketch", "Feedback Wanted"]
+    }
+  ];
+  for (const info of forumChannels) {
+    channels[info.name] = await ensureForumChannel(
+      guild, galleryCategory, info,
+      galleryPermissions(guild, info.postingRole, staffNames)
+    );
+  }
+
+  const standardGallery = [
+    { name: "📸・photography", topic: "Share photos, discuss techniques, and talk about photography.", postingRole: "📸・Photographer" },
+    { name: "🧵・crafting-corner", topic: "Share crafting projects, works in progress, questions, and techniques.", postingRole: "🧵・Crafter" }
+  ];
+  for (const info of standardGallery) {
+    channels[info.name] = await ensureChannel(
+      guild, galleryCategory, info,
+      galleryPermissions(guild, info.postingRole, staffNames)
+    );
+  }
+
+  channels["💬・gallery-chat"] = await ensureChannel(guild, galleryCategory, {
+    name: "💬・gallery-chat",
+    topic: "Chat about gallery posts, share ideas, and give creators encouragement."
+  });
+
+  const staffChannels = [
+    { name: "🔒・guuji-office", topic: "Private office for the Guuji.", roles: ["⛩️・Guuji"] },
+    { name: "🌸・senior-shrine-maiden", topic: "Private coordination for senior shrine staff.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden"] },
+    { name: "🦊・shrine-maiden-office", topic: "Staff coordination for shrine maidens.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
+    { name: "🪷・miko-training", topic: "Training and guidance for miko apprentices.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden", "🪷・Miko Apprentice"] }
+  ];
+  for (const info of staffChannels) {
+    channels[info.name] = await ensureChannel(
+      guild, staffCategory, info, staffChannelPermissions(guild, info.roles)
+    );
+  }
+
   await ensureEmbed(channels["🌸・welcome"], "୨୧ Welcome to the shrine!", welcomeEmbed(guild));
   await ensureEmbed(channels["📜・rules"], "୨୧ Shrine guidelines", rulesEmbed());
   await ensureRolePanel(channels["🎭・choose-roles"]);
 
   const config = readConfig();
   config[guild.id] = {
-    categoryId: category.id,
+    categoryId: mainCategory.id,
     welcomeChannelId: channels["🌸・welcome"].id,
-    roleChannelId: channels["🎭・choose-roles"].id
+    roleChannelId: channels["🎭・choose-roles"].id,
+    galleryCategoryId: galleryCategory.id,
+    staffCategoryId: staffCategory.id
   };
   writeConfig(config);
 }
-
 const setupCommand = new SlashCommandBuilder()
   .setName("setup")
   .setDescription("Create the Emi Atelier shrine server template.")
