@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const {
   Client, GatewayIntentBits, PermissionFlagsBits, ChannelType,
-  EmbedBuilder, REST, Routes, SlashCommandBuilder,
+  EmbedBuilder, REST, Routes, SlashCommandBuilder, MessageFlags,
   ActionRowBuilder, ButtonBuilder, ButtonStyle
 } = require("discord.js");
 
@@ -83,7 +83,7 @@ async function ensureRole(guild, info) {
   let role = guild.roles.cache.find((item) => item.name === info.name);
   const options = {
     name: info.name,
-    color: info.color,
+    colors: { primaryColor: info.color },
     permissions: info.permissions || [],
     mentionable: Boolean(info.mentionable),
     reason: "Shrine Assistant server setup"
@@ -226,14 +226,14 @@ client.on("interactionCreate", async (interaction) => {
     if (!choice || !interaction.inGuild()) return;
     const role = interaction.guild.roles.cache.find((item) => item.name === choice.role);
     if (!role) {
-      return interaction.reply({ content: "That role isn't available yet. Please ask a moderator to run /setup.", ephemeral: true });
+      return interaction.reply({ content: "That role isn't available yet. Please ask a moderator to run /setup.", flags: MessageFlags.Ephemeral });
     }
     if (!role.editable) {
-      return interaction.reply({ content: "I can't manage that role yet. Please ask an admin to move my bot role above the self-assignable roles.", ephemeral: true });
+      return interaction.reply({ content: "I can't manage that role yet. Please ask an admin to move my bot role above the self-assignable roles.", flags: MessageFlags.Ephemeral });
     }
     const member = await interaction.guild.members.fetch(interaction.user.id);
     const hasRole = member.roles.cache.has(role.id);
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (hasRole) {
       await member.roles.remove(role, "Member used the self-role panel");
       await interaction.editReply("୨୧ Removed **" + role.name + "** from your roles.");
@@ -248,10 +248,10 @@ client.on("interactionCreate", async (interaction) => {
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
     return interaction.reply({
       content: "You need Administrator permission to use this command.",
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   try {
     await setupShrine(interaction.guild);
     await interaction.editReply("୨୧ Your shrine is ready! Channels, roles, and embeds are in place.");
