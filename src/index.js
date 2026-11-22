@@ -478,6 +478,7 @@ const moderationCommands = [
   new SlashCommandBuilder().setName("profile-view").setDescription("View a creator profile.")
     .addUserOption(o => o.setName("member").setDescription("Member whose profile you want to see").setRequired(false)),
   new SlashCommandBuilder().setName("profile-clear").setDescription("Delete your creator profile."),
+  new SlashCommandBuilder().setName("creators").setDescription("Browse members who have shared a creator profile."),
   new SlashCommandBuilder().setName("spotlight").setDescription("Celebrate a community member's creative work (staff only).")
     .addUserOption(o => o.setName("member").setDescription("Creator to feature").setRequired(true))
     .addStringOption(o => o.setName("category").setDescription("Type of creative work").setRequired(true)
@@ -572,6 +573,23 @@ async function handleModerationCommand(interaction) {
     return interaction.reply({ embeds: [embed] });
   }
 
+  if (command === "creators") {
+    const profiles = readConfig()[interaction.guild.id]?.profiles || {};
+    const entries = Object.entries(profiles).slice(0, 10);
+    if (!entries.length) return interaction.reply({ content: "No creator profiles have been shared yet. Be the first with /profile-set!", flags: MessageFlags.Ephemeral });
+    const lines = [];
+    for (const [userId, profile] of entries) {
+      const member = await interaction.guild.members.fetch(userId).catch(() => null);
+      if (!member) continue;
+      lines.push("**" + member.displayName + "** — " + profile.interests + "\n" + profile.about.slice(0, 180) + "\nUse /profile-view to see their full profile.");
+    }
+    if (!lines.length) return interaction.reply({ content: "There are no currently available creator profiles.", flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Meet the creators of Atelier de Emi")
+      .setDescription(lines.join("\n\n"))
+      .setFooter({ text: "Emi Atelier • shared by creators, for creators ♡" });
+    return interaction.reply({ embeds: [embed] });
+  }
+
   if (command === "profile-clear") {
     const profiles = guildData.profiles || {};
     if (!profiles[interaction.user.id]) return interaction.reply({ content: "You don't have a creator profile to remove.", flags: MessageFlags.Ephemeral });
@@ -663,7 +681,7 @@ async function handleModerationCommand(interaction) {
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Shrine Assistant — help")
       .setDescription("Hello! I help keep Atelier de Emi organised and welcoming.")
       .addFields(
-        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/userinfo` — view member information", inline: false },
+        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
         { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Browse 🎐・creative-prompts for inspiration, then share your take in the Community Gallery!", inline: false }
       ).setFooter({ text: "Emi Atelier • shrine-inspired, creator-friendly • everyone is welcome ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
