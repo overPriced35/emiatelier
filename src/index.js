@@ -1187,6 +1187,21 @@ client.on("interactionCreate", async (interaction) => {
     return;
   }
 
+  if (interaction.isButton() && interaction.customId === "ticket_claim") {
+    if (!interaction.inGuild() || !interaction.channel) return;
+    const staffNames = ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"];
+    const isStaff = interaction.member.roles.cache.some(role => staffNames.includes(role.name));
+    if (!isStaff) return interaction.reply({ content: "Only shrine staff can claim a support conversation.", flags: MessageFlags.Ephemeral });
+    const topic = interaction.channel.topic || "";
+    if (!topic.includes("Status: open")) return interaction.reply({ content: "This conversation is not open.", flags: MessageFlags.Ephemeral });
+    if (topic.includes("Claimed by:")) return interaction.reply({ content: "This conversation has already been claimed.", flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.channel.setTopic(topic + " | Claimed by: " + interaction.user.id);
+    await interaction.channel.send({ embeds: [new EmbedBuilder().setColor(purple).setTitle("୨୧ Conversation claimed").setDescription(interaction.user.toString() + " is now looking after this request.").setTimestamp()], allowedMentions: { users: [interaction.user.id] } });
+    await sendModerationLog(interaction.guild, "୨୧ Support conversation claimed", "**Channel:** " + interaction.channel.toString() + "\n**Claimed by:** " + interaction.user.toString());
+    return interaction.editReply("୨୧ You've claimed this support conversation.");
+  }
+
   if (interaction.isButton() && interaction.customId === "ticket_close") {
     if (!interaction.inGuild() || !interaction.channel) return;
     const topic = interaction.channel.topic || "";
@@ -1283,6 +1298,7 @@ client.on("interactionCreate", async (interaction) => {
       .addFields({ name: "Opened by", value: interaction.user.toString(), inline: true }, { name: "Request type", value: kind, inline: true })
       .setFooter({ text: "Atelier de Emi • private support conversation ♡" }).setTimestamp();
     const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("ticket_claim").setLabel("Claim conversation").setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId("ticket_close").setLabel("Close conversation").setStyle(ButtonStyle.Secondary)
     );
     await channel.send({ content: interaction.user.toString() + " • " + staffNames.map(name => guild.roles.cache.find(role => role.name === name)).filter(Boolean).map(role => role.toString()).join(" "), embeds: [embed], components: [row], allowedMentions: { users: [interaction.user.id], roles: [] } });
