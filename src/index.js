@@ -470,6 +470,14 @@ const moderationCommands = [
     .addStringOption(o => o.setName("theme").setDescription("Cosplay, art, photography, crafting or anything goes").setMaxLength(80).setRequired(true))
     .addStringOption(o => o.setName("description").setDescription("What should members create or try?").setMaxLength(1200).setRequired(true))
     .addStringOption(o => o.setName("deadline").setDescription("Optional deadline, e.g. 15 December or no deadline").setMaxLength(80).setRequired(false)),
+  new SlashCommandBuilder().setName("profile-set").setDescription("Create or update your creator profile.")
+    .addStringOption(o => o.setName("interests").setDescription("Your creative interests").setMaxLength(120).setRequired(true))
+    .addStringOption(o => o.setName("about").setDescription("A short introduction about you and your work").setMaxLength(400).setRequired(true))
+    .addStringOption(o => o.setName("portfolio").setDescription("Optional HTTPS link to your portfolio or socials").setMaxLength(500).setRequired(false))
+    .addStringOption(o => o.setName("looking-for").setDescription("Optional: friends, collabs, feedback, advice, etc.").setMaxLength(160).setRequired(false)),
+  new SlashCommandBuilder().setName("profile-view").setDescription("View a creator profile.")
+    .addUserOption(o => o.setName("member").setDescription("Member whose profile you want to see").setRequired(false)),
+  new SlashCommandBuilder().setName("profile-clear").setDescription("Delete your creator profile."),
   new SlashCommandBuilder().setName("spotlight").setDescription("Celebrate a community member's creative work (staff only).")
     .addUserOption(o => o.setName("member").setDescription("Creator to feature").setRequired(true))
     .addStringOption(o => o.setName("category").setDescription("Type of creative work").setRequired(true)
@@ -524,6 +532,52 @@ async function handleModerationCommand(interaction) {
     if (deadline) embed.addFields({ name: "Deadline", value: deadline, inline: true });
     await channel.send({ content: "୨୧ A new creative prompt has arrived! Share your take in the relevant gallery channel.", embeds: [embed], allowedMentions: { parse: [] } });
     return interaction.reply({ content: "୨୧ Your creative prompt has been posted in 🎐・creative-prompts!", flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "profile-set") {
+    const interests = interaction.options.getString("interests", true);
+    const about = interaction.options.getString("about", true);
+    const portfolio = interaction.options.getString("portfolio");
+    const lookingFor = interaction.options.getString("looking-for");
+    let parsed;
+    if (portfolio) {
+      try { parsed = new URL(portfolio); } catch {}
+      if (!parsed || parsed.protocol !== "https:") {
+        return interaction.reply({ content: "Please use a valid HTTPS link for your portfolio or social page.", flags: MessageFlags.Ephemeral });
+      }
+    }
+    guildData.profiles ||= {};
+    guildData.profiles[interaction.user.id] = {
+      interests, about, portfolio: portfolio || null, lookingFor: lookingFor || null,
+      updatedAt: new Date().toISOString()
+    };
+    writeConfig(config);
+    return interaction.reply({ content: "୨୧ Your creator profile has been saved! Use /profile-view to preview it. You can update it any time with /profile-set or remove it with /profile-clear.", flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "profile-view") {
+    const targetUser = interaction.options.getUser("member") || interaction.user;
+    const profile = readConfig()[interaction.guild.id]?.profiles?.[targetUser.id];
+    if (!profile) return interaction.reply({ content: targetUser.id === interaction.user.id ? "You haven't created a profile yet. Use /profile-set to introduce your creative work." : "That member hasn't created a creator profile yet.", flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Creator profile")
+      .setDescription(profile.about)
+      .setThumbnail(targetUser.displayAvatarURL({ size: 256 }))
+      .addFields(
+        { name: "Creator", value: targetUser.toString(), inline: true },
+        { name: "Creative interests", value: profile.interests, inline: true }
+      )
+      .setFooter({ text: "Emi Atelier • every creator has a story ♡" });
+    if (profile.lookingFor) embed.addFields({ name: "Open to", value: profile.lookingFor, inline: false });
+    if (profile.portfolio) embed.addFields({ name: "Portfolio / socials", value: "[Visit link](" + profile.portfolio + ")", inline: false });
+    return interaction.reply({ embeds: [embed] });
+  }
+
+  if (command === "profile-clear") {
+    const profiles = guildData.profiles || {};
+    if (!profiles[interaction.user.id]) return interaction.reply({ content: "You don't have a creator profile to remove.", flags: MessageFlags.Ephemeral });
+    delete profiles[interaction.user.id];
+    writeConfig(config);
+    return interaction.reply({ content: "୨୧ Your creator profile has been deleted.", flags: MessageFlags.Ephemeral });
   }
 
   if (command === "spotlight") {
@@ -609,7 +663,7 @@ async function handleModerationCommand(interaction) {
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Shrine Assistant — help")
       .setDescription("Hello! I help keep Atelier de Emi organised and welcoming.")
       .addFields(
-        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/userinfo` — view member information", inline: false },
+        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/userinfo` — view member information", inline: false },
         { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Browse 🎐・creative-prompts for inspiration, then share your take in the Community Gallery!", inline: false }
       ).setFooter({ text: "Emi Atelier • shrine-inspired, creator-friendly • everyone is welcome ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
