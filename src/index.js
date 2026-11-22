@@ -561,12 +561,12 @@ const moderationCommands = [
   new SlashCommandBuilder().setName("bug-report").setDescription("Privately report a Shrine Assistant or server issue.")
     .addStringOption(o => o.setName("area").setDescription("Where did it happen? e.g. /setup, roles, welcome").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("details").setDescription("What happened, and what did you expect?").setMaxLength(1500).setRequired(true))
-    .addStringOption(o => o.setName("steps").setDescription("Optional steps to reproduce the issue").setMaxLength(1000).setRequired(false))
     .addStringOption(o => o.setName("severity").setDescription("How much does this affect the experience?").addChoices(
       { name: "Low — minor issue", value: "Low" },
       { name: "Normal — feature partly affected", value: "Normal" },
       { name: "High — blocks a core feature", value: "High" }
-    ).setRequired(true)),
+    ).setRequired(true))
+    .addStringOption(o => o.setName("steps").setDescription("Optional steps to reproduce the issue").setMaxLength(1000).setRequired(false)),
   new SlashCommandBuilder().setName("feedback").setDescription("Privately share feedback about the server or bot.")
     .addStringOption(o => o.setName("topic").setDescription("What is your feedback about?").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("details").setDescription("What works well, or what could be better?").setMaxLength(1500).setRequired(true)),
