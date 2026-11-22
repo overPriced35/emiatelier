@@ -601,7 +601,8 @@ const moderationCommands = [
   new SlashCommandBuilder().setName("profile-view").setDescription("View a creator profile.")
     .addUserOption(o => o.setName("member").setDescription("Member whose profile you want to see").setRequired(false)),
   new SlashCommandBuilder().setName("profile-clear").setDescription("Delete your creator profile."),
-  new SlashCommandBuilder().setName("creators").setDescription("Browse members who have shared a creator profile."),
+  new SlashCommandBuilder().setName("creators").setDescription("Browse members who have shared a creator profile.")
+    .addIntegerOption(o => o.setName("page").setDescription("Page of creator profiles to view").setMinValue(1).setMaxValue(1000).setRequired(false)),
   new SlashCommandBuilder().setName("spotlight").setDescription("Celebrate a community member's creative work (staff only).")
     .addUserOption(o => o.setName("member").setDescription("Creator to feature").setRequired(true))
     .addStringOption(o => o.setName("category").setDescription("Type of creative work").setRequired(true)
@@ -786,18 +787,28 @@ async function handleModerationCommand(interaction) {
 
   if (command === "creators") {
     const profiles = readConfig()[interaction.guild.id]?.profiles || {};
-    const entries = Object.entries(profiles).slice(0, 10);
-    if (!entries.length) return interaction.reply({ content: "No creator profiles have been shared yet. Be the first with /profile-set!", flags: MessageFlags.Ephemeral });
+    const sorted = Object.entries(profiles).sort((a, b) =>
+      new Date(b[1].updatedAt || 0).getTime() - new Date(a[1].updatedAt || 0).getTime()
+    );
+    if (!sorted.length) return interaction.reply({ content: "No creator profiles have been shared yet. Be the first with /profile-set!", flags: MessageFlags.Ephemeral });
+    const page = interaction.options.getInteger("page") || 1;
+    const pageSize = 10;
+    const pageEntries = sorted.slice((page - 1) * pageSize, page * pageSize);
+    if (!pageEntries.length) {
+      const lastPage = Math.max(1, Math.ceil(sorted.length / pageSize));
+      return interaction.reply({ content: "There aren't that many pages yet. There are currently **" + sorted.length + "** creator profiles across **" + lastPage + "** page(s).", flags: MessageFlags.Ephemeral });
+    }
     const lines = [];
-    for (const [userId, profile] of entries) {
+    for (const [userId, profile] of pageEntries) {
       const member = await interaction.guild.members.fetch(userId).catch(() => null);
       if (!member) continue;
-      lines.push("**" + member.displayName + "** — " + profile.interests + "\n" + profile.about.slice(0, 180) + "\nUse /profile-view to see their full profile.");
+      lines.push("**" + member.displayName + "** — " + profile.interests + "\n" + profile.about.slice(0, 180) + "\nUse /profile-view member:" + member.user.username + " to see their full profile.");
     }
-    if (!lines.length) return interaction.reply({ content: "There are no currently available creator profiles.", flags: MessageFlags.Ephemeral });
+    if (!lines.length) return interaction.reply({ content: "There are no currently available creator profiles on this page.", flags: MessageFlags.Ephemeral });
+    const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
     const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Meet the creators of Atelier de Emi")
       .setDescription(lines.join("\n\n"))
-      .setFooter({ text: "Emi Atelier • shared by creators, for creators ♡" });
+      .setFooter({ text: "Page " + page + " of " + totalPages + " • " + sorted.length + " shared profiles • use /creators page:" + (page + 1) + " for more ♡" });
     return interaction.reply({ embeds: [embed] });
   }
 
@@ -893,7 +904,7 @@ async function handleModerationCommand(interaction) {
       .setDescription("Hello! I help keep Atelier de Emi organised and welcoming.")
       .addFields(
         { name: "Emi Atelier", value: "`/emi-update` — publish a creator update (owner only)", inline: false },
-        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`🆘・contact-staff` — open a private support conversation\n`/bug-report` — privately report a bot/server issue\n`/feedback` — privately share community feedback\n`/icebreaker` — post a fun conversation starter\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/project-update project progress link` — share your creative progress\n`/feedback-request project question link` — ask for constructive feedback\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
+        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`🆘・contact-staff` — open a private support conversation\n`/bug-report` — privately report a bot/server issue\n`/feedback` — privately share community feedback\n`/icebreaker` — post a fun conversation starter\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/project-update project progress link` — share your creative progress\n`/feedback-request project question link` — ask for constructive feedback\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators page` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
         { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Browse 🎐・creative-prompts for inspiration, then share your take in the Community Gallery!", inline: false }
       ).setFooter({ text: "Emi Atelier • shrine-inspired, creator-friendly • everyone is welcome ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
