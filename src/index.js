@@ -481,6 +481,10 @@ const moderationCommands = [
     .addStringOption(o => o.setName("project").setDescription("Project name").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("progress").setDescription("What have you worked on or learned?").setMaxLength(1200).setRequired(true))
     .addStringOption(o => o.setName("link").setDescription("Optional HTTPS link to a photo or project").setMaxLength(500).setRequired(false)),
+  new SlashCommandBuilder().setName("feedback-request").setDescription("Ask the community for feedback on a creative project.")
+    .addStringOption(o => o.setName("project").setDescription("Project name").setMaxLength(100).setRequired(true))
+    .addStringOption(o => o.setName("question").setDescription("What feedback would help you?").setMaxLength(800).setRequired(true))
+    .addStringOption(o => o.setName("link").setDescription("Optional HTTPS link to your work").setMaxLength(500).setRequired(false)),
   new SlashCommandBuilder().setName("kudos").setDescription("Give a community member a little public appreciation.")
     .addUserOption(o => o.setName("member").setDescription("The creator you want to appreciate").setRequired(true))
     .addStringOption(o => o.setName("message").setDescription("What would you like to appreciate them for?").setMaxLength(400).setRequired(true)),
@@ -593,6 +597,28 @@ async function handleModerationCommand(interaction) {
     if (link) embed.addFields({ name: "Project link", value: "[Take a look](" + link + ")" });
     await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
     return interaction.reply({ content: "୨୧ Your project update has been shared in 💬・gallery-chat!", flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "feedback-request") {
+    const project = interaction.options.getString("project", true);
+    const question = interaction.options.getString("question", true);
+    const link = interaction.options.getString("link");
+    let parsed;
+    if (link) {
+      try { parsed = new URL(link); } catch {}
+      if (!parsed || parsed.protocol !== "https:") return interaction.reply({ content: "Please provide a valid HTTPS link.", flags: MessageFlags.Ephemeral });
+    }
+    const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "💬・gallery-chat");
+    if (!channel) return interaction.reply({ content: "The gallery chat isn't set up yet. Ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Feedback requested: " + project)
+      .setDescription(question)
+      .addFields({ name: "Creator", value: interaction.user.toString() })
+      .setThumbnail(interaction.user.displayAvatarURL({ size: 256 }))
+      .setFooter({ text: "Atelier de Emi • kind, constructive feedback only ♡" })
+      .setTimestamp();
+    if (link) embed.addFields({ name: "View the project", value: "[Take a look](" + link + ")" });
+    await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
+    return interaction.reply({ content: "୨୧ Your feedback request has been shared in 💬・gallery-chat!", flags: MessageFlags.Ephemeral });
   }
 
   if (command === "kudos") {
@@ -762,7 +788,7 @@ async function handleModerationCommand(interaction) {
       .setDescription("Hello! I help keep Atelier de Emi organised and welcoming.")
       .addFields(
         { name: "Emi Atelier", value: "`/emi-update` — publish a creator update (owner only)", inline: false },
-        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/project-update project progress link` — share your creative progress\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
+        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/project-update project progress link` — share your creative progress\n`/feedback-request project question link` — ask for constructive feedback\n`/feedback-request project question link` — ask for constructive feedback\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
         { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Browse 🎐・creative-prompts for inspiration, then share your take in the Community Gallery!", inline: false }
       ).setFooter({ text: "Emi Atelier • shrine-inspired, creator-friendly • everyone is welcome ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
