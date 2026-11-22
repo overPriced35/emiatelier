@@ -454,7 +454,14 @@ const moderationCommands = [
   new SlashCommandBuilder().setName("suggest").setDescription("Send an idea to the Emi Atelier team.")
     .addStringOption(o => o.setName("idea").setDescription("Your suggestion for the community").setMaxLength(1000).setRequired(true)),
   new SlashCommandBuilder().setName("report").setDescription("Privately contact shrine staff about a concern.")
-    .addStringOption(o => o.setName("details").setDescription("Tell staff what happened").setMaxLength(1500).setRequired(true))
+    .addStringOption(o => o.setName("details").setDescription("Tell staff what happened").setMaxLength(1500).setRequired(true)),
+  new SlashCommandBuilder().setName("event-create").setDescription("Create a community event (staff only).")
+    .addStringOption(o => o.setName("title").setDescription("Name of the event").setMaxLength(100).setRequired(true))
+    .addStringOption(o => o.setName("start").setDescription("Start date and time in ISO 8601 format, e.g. 2026-12-01T18:00:00+01:00").setRequired(true))
+    .addIntegerOption(o => o.setName("duration").setDescription("Duration in minutes (15–1440)").setMinValue(15).setMaxValue(1440).setRequired(true))
+    .addStringOption(o => o.setName("location").setDescription("Where the event takes place (online or venue)").setMaxLength(100).setRequired(true))
+    .addStringOption(o => o.setName("description").setDescription("What members can expect").setMaxLength(1000).setRequired(false)),
+  new SlashCommandBuilder().setName("events").setDescription("See upcoming Emi Atelier community events.")
 ].map(command => command.toJSON());
 
 function getWarnings(config, guildId, userId) {
@@ -478,6 +485,56 @@ async function handleModerationCommand(interaction) {
   const config = readConfig();
   const guildData = config[interaction.guild.id] ||= {};
   guildData.warnings ||= {};
+
+  if (command === "event-create") {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageEvents)) {
+      return interaction.reply({ content: "Only event managers and shrine staff can create community events.", flags: MessageFlags.Ephemeral });
+    }
+    const title = interaction.options.getString("title", true);
+    const startInput = interaction.options.getString("start", true);
+    const duration = interaction.options.getInteger("duration", true);
+    const location = interaction.options.getString("location", true);
+    const description = interaction.options.getString("description") || "Join the Emi Atelier community for this event!";
+    const start = new Date(startInput);
+    if (!Number.isFinite(start.getTime()) || start.getTime() <= Date.now()) {
+      return interaction.reply({ content: "Please provide a valid future date and time in ISO 8601 format, including your UTC offset (for example, 2026-12-01T18:00:00+01:00).", flags: MessageFlags.Ephemeral });
+    }
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    try {
+      const event = await interaction.guild.scheduledEvents.create({
+        name: title,
+        description,
+        scheduledStartTime: start,
+        scheduledEndTime: new Date(start.getTime() + duration * 60 * 1000),
+        privacyLevel: 2,
+        entityType: 3,
+        entityMetadata: { location },
+        reason: "Community event created by " + interaction.user.tag
+      });
+      await interaction.editReply("୨୧ Event created: **" + event.name + "**\\n" + event.url + "\\nMembers can open the event to mark themselves as interested.");
+    } catch (error) {
+      await interaction.editReply("I couldn't create that event. Please check that I have the Manage Events permission and that the date, time and location are valid.");
+      console.error("Event creation failed:", error);
+    }
+    return;
+  }
+
+  if (command === "events") {
+    const events = await interaction.guild.scheduledEvents.fetch().catch(() => null);
+    if (!events) return interaction.reply({ content: "I couldn't retrieve the event list just now.", flags: MessageFlags.Ephemeral });
+    const upcoming = [...events.values()]
+      .filter(event => event.scheduledStartTimestamp > Date.now())
+      .sort((a, b) => a.scheduledStartTimestamp - b.scheduledStartTimestamp)
+      .slice(0, 10);
+    if (!upcoming.length) return interaction.reply({ content: "There are no upcoming community events scheduled yet. Keep an eye on 📢・announcements!", flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Upcoming at Emi Atelier")
+      .setDescription(upcoming.map(event =>
+        "**" + event.name + "**\\n<t:" + Math.floor(event.scheduledStartTimestamp / 1000) + ":F> • " +
+        (event.entityMetadata?.location || "Location to be announced") + "\\n[View event](" + event.url + ")"
+      ).join("\\n\\n"))
+      .setFooter({ text: "Open an event to mark yourself as interested ♡" });
+    return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  }
 
   if (command === "help") {
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Shrine Assistant — help")
