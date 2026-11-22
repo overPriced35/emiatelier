@@ -511,7 +511,7 @@ async function handleModerationCommand(interaction) {
         entityMetadata: { location },
         reason: "Community event created by " + interaction.user.tag
       });
-      await interaction.editReply("୨୧ Event created: **" + event.name + "**\\n" + event.url + "\\nMembers can open the event to mark themselves as interested.");
+      await interaction.editReply("୨୧ Event created: **" + event.name + "**\n" + event.url + "\nMembers can open the event to mark themselves as interested.");
     } catch (error) {
       await interaction.editReply("I couldn't create that event. Please check that I have the Manage Events permission and that the date, time and location are valid.");
       console.error("Event creation failed:", error);
@@ -529,9 +529,9 @@ async function handleModerationCommand(interaction) {
     if (!upcoming.length) return interaction.reply({ content: "There are no upcoming community events scheduled yet. Keep an eye on 📢・announcements!", flags: MessageFlags.Ephemeral });
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Upcoming at Emi Atelier")
       .setDescription(upcoming.map(event =>
-        "**" + event.name + "**\\n<t:" + Math.floor(event.scheduledStartTimestamp / 1000) + ":F> • " +
-        (event.entityMetadata?.location || "Location to be announced") + "\\n[View event](" + event.url + ")"
-      ).join("\\n\\n"))
+        "**" + event.name + "**\n<t:" + Math.floor(event.scheduledStartTimestamp / 1000) + ":F> • " +
+        (event.entityMetadata?.location || "Location to be announced") + "\n[View event](" + event.url + ")"
+      ).join("\n\n"))
       .setFooter({ text: "Open an event to mark yourself as interested ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
@@ -540,7 +540,7 @@ async function handleModerationCommand(interaction) {
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Shrine Assistant — help")
       .setDescription("Hello! I help keep Emi Atelier organised and welcoming.")
       .addFields(
-        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/userinfo` — view member information", inline: false },
+        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/userinfo` — view member information", inline: false },
         { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Share your creativity in the Community Gallery!", inline: false }
       ).setFooter({ text: "Inspired by Yae Miko and the Grand Narukami Shrine • everyone is welcome ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
