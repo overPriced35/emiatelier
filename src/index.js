@@ -4,7 +4,7 @@ const path = require("node:path");
 const {
   Client, GatewayIntentBits, PermissionFlagsBits, ChannelType,
   EmbedBuilder, REST, Routes, SlashCommandBuilder, MessageFlags,
-  ActionRowBuilder, ButtonBuilder, ButtonStyle
+  ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder
 } = require("discord.js");
 
 const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
@@ -167,6 +167,7 @@ const channelPlan = [
   { name: "🎭・choose-roles", topic: "Choose your own community and notification roles." },
   { name: "🤖・bot-commands", topic: "A home for Shrine Assistant commands and helpful tools." },
   { name: "💡・suggestions", topic: "Community ideas submitted through /suggest. React with 👍 to support an idea or 👎 if it is not a fit." },
+  { name: "🆘・contact-staff", topic: "Need a hand? Open a private conversation with the shrine team here." },
   { name: "🌟・creator-spotlights", topic: "Community members and their creative work, celebrated by Emi Atelier and the Atelier de Emi team." },
   { name: "🎐・creative-prompts", topic: "Creative challenges and inspiration from Emi Atelier. Join in at your own pace and share your work in the gallery." },
   { name: "📓・emi-updates", topic: "Updates from Emi Atelier: personal cosplay projects, creative progress, plans and announcements from Emi." }
@@ -343,6 +344,37 @@ async function ensureStartHereLinks(channel, guild, channels) {
   await existing.edit({ components: [row] });
 }
 
+async function ensureTicketPanel(channel) {
+  const messages = await channel.messages.fetch({ limit: 30 }).catch(() => null);
+  const existing = messages && messages.find(message =>
+    message.author.id === client.user.id &&
+    message.embeds.some(embed => embed.title === "୨୧ Contact the shrine team")
+  );
+  const embed = new EmbedBuilder()
+    .setColor(purple)
+    .setTitle("୨୧ Contact the shrine team")
+    .setDescription("Need a little help? Open a private conversation with the shrine staff. Choose the option that best fits your request, and a private channel will be created for you and the team.\n\n**Please note:** Be respectful, share only information needed to explain the issue, and never post passwords or sensitive personal details.")
+    .addFields(
+      { name: "General help", value: "Questions about the community or finding your way around", inline: true },
+      { name: "Member concern", value: "A private concern about another member or community safety", inline: true },
+      { name: "Bot or server issue", value: "Something not working as expected", inline: true },
+      { name: "Collaboration", value: "A community project or partnership enquiry", inline: true }
+    )
+    .setFooter({ text: "Atelier de Emi • we're happy to help ♡" });
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId("ticket_create")
+    .setPlaceholder("Choose what you need help with…")
+    .addOptions(
+      { label: "General help", value: "General Help", description: "Questions about the community" },
+      { label: "Member concern", value: "Member Concern", description: "A private member or safety concern" },
+      { label: "Bot or server issue", value: "Bot or Server Issue", description: "Report something that is not working" },
+      { label: "Collaboration", value: "Collaboration", description: "Discuss a community project or partnership" }
+    );
+  const row = new ActionRowBuilder().addComponents(menu);
+  if (existing) await existing.edit({ embeds: [embed], components: [row] });
+  else await channel.send({ embeds: [embed], components: [row] });
+}
+
 async function setupShrine(guild) {
   await guild.channels.fetch();
   await guild.roles.fetch();
@@ -378,7 +410,7 @@ async function setupShrine(guild) {
   })));
 
   const channels = {};
-  const communityChannels = ["💬・general", "🎀・introductions", "🤖・bot-commands"];
+  const communityChannels = ["💬・general", "🎀・introductions", "🤖・bot-commands", "🆘・contact-staff"];
   const creatorChannels = ["🌟・creator-spotlights", "🎐・creative-prompts", "📓・emi-updates"];
   for (const info of channelPlan) {
     const category = communityChannels.includes(info.name) ? communityCategory
@@ -466,6 +498,7 @@ async function setupShrine(guild) {
   await ensureEmbed(channels["📜・rules"], "୨୧ Shrine guidelines", rulesEmbed());
   await ensureEmbed(channels["📖・staff-command-guide"], "୨୧ Shrine Assistant — staff command guide", staffGuideEmbed());
   await ensureRolePanel(channels["🎭・choose-roles"]);
+  await ensureTicketPanel(channels["🆘・contact-staff"]);
 
   const config = readConfig();
   config[guild.id] = {
@@ -1154,6 +1187,39 @@ client.on("interactionCreate", async (interaction) => {
     return;
   }
 
+  if (interaction.isButton() && interaction.customId === "ticket_close") {
+    if (!interaction.inGuild() || !interaction.channel) return;
+    const topic = interaction.channel.topic || "";
+    const ownerMatch = topic.match(/Ticket owner: (\\d+)/);
+    if (!ownerMatch) return interaction.reply({ content: "I couldn't verify who opened this ticket. Please contact staff.", flags: MessageFlags.Ephemeral });
+    const ownerId = ownerMatch[1];
+    const staffNames = ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"];
+    const isStaff = interaction.member.roles.cache.some(role => staffNames.includes(role.name));
+    if (interaction.user.id !== ownerId && !isStaff) {
+      return interaction.reply({ content: "Only the person who opened this ticket or shrine staff can close it.", flags: MessageFlags.Ephemeral });
+    }
+    if (topic.includes("Status: closed")) {
+      return interaction.reply({ content: "This ticket is already closed.", flags: MessageFlags.Ephemeral });
+    }
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const owner = await interaction.guild.members.fetch(ownerId).catch(() => null);
+    if (owner) {
+      await interaction.channel.permissionOverwrites.edit(owner, {
+        ViewChannel: true, ReadMessageHistory: true, SendMessages: false, AttachFiles: false
+      });
+    }
+    await interaction.channel.setTopic(topic.replace("Status: open", "Status: closed"));
+    await interaction.channel.setName(("closed-" + interaction.channel.name).slice(0, 100));
+    await interaction.channel.send({
+      embeds: [new EmbedBuilder().setColor(purple).setTitle("୨୧ Ticket closed")
+        .setDescription("This support conversation has been closed. The channel remains available as a read-only record for you and the shrine team.")
+        .setTimestamp()],
+      allowedMentions: { parse: [] }
+    });
+    await interaction.editReply("୨୧ Ticket closed. Thank you for reaching out!");
+    return;
+  }
+
     if (interaction.isButton() && interaction.customId.startsWith("selfrole_")) {
     const choice = selfRoleButtons.find((item) => item.id === interaction.customId);
     if (!choice || !interaction.inGuild()) return;
@@ -1175,6 +1241,50 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.editReply("୨୧ Added **" + role.name + "** to your roles!");
     }
     return;
+  }
+
+  if (interaction.isStringSelectMenu() && interaction.customId === "ticket_create") {
+    if (!interaction.inGuild()) return interaction.reply({ content: "Tickets can only be opened inside the server.", flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const guild = interaction.guild;
+    const existing = guild.channels.cache.find(channel =>
+      channel.type === ChannelType.GuildText &&
+      channel.topic?.includes("Ticket owner: " + interaction.user.id) &&
+      channel.topic.includes("Status: open")
+    );
+    if (existing) {
+      return interaction.editReply("You already have an open support conversation: " + existing.toString() + ". Please continue there or close it before opening another.");
+    }
+    const category = guild.channels.cache.find(channel => channel.type === ChannelType.GuildCategory && channel.name === "🏯・SHRINE STAFF");
+    if (!category) return interaction.editReply("The staff area is not set up yet. Please ask an administrator to run /setup.");
+    const kind = interaction.values[0];
+    const staffNames = ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"];
+    const overwrites = [
+      { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
+      { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks] },
+      { id: client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ManageMessages, PermissionFlagsBits.EmbedLinks] }
+    ];
+    for (const roleName of staffNames) {
+      const role = guild.roles.cache.find(item => item.name === roleName);
+      if (role) overwrites.push({ id: role.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles] });
+    }
+    const slug = interaction.user.username.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 35) || "member";
+    const channel = await guild.channels.create({
+      name: ("ticket-" + slug).slice(0, 90),
+      type: ChannelType.GuildText,
+      parent: category.id,
+      topic: "Ticket owner: " + interaction.user.id + " | Category: " + kind + " | Status: open",
+      permissionOverwrites: overwrites
+    });
+    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ " + kind)
+      .setDescription("Hello " + interaction.user.toString() + "! A member of the shrine team will be with you as soon as possible. Please explain what you need help with below.\n\n**A few reminders**\n• Keep the conversation respectful.\n• Do not share passwords or sensitive personal information.\n• For a member concern, share only the details staff need to look into it.")
+      .addFields({ name: "Opened by", value: interaction.user.toString(), inline: true }, { name: "Request type", value: kind, inline: true })
+      .setFooter({ text: "Atelier de Emi • private support conversation ♡" }).setTimestamp();
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("ticket_close").setLabel("Close conversation").setStyle(ButtonStyle.Secondary)
+    );
+    await channel.send({ content: interaction.user.toString() + " • " + staffNames.map(name => guild.roles.cache.find(role => role.name === name)).filter(Boolean).map(role => role.toString()).join(" "), embeds: [embed], components: [row], allowedMentions: { users: [interaction.user.id], roles: [] } });
+    return interaction.editReply("୨୧ Your private support conversation is ready: " + channel.toString());
   }
 
   if (interaction.isChatInputCommand() && interaction.commandName !== "setup") {
