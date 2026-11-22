@@ -348,7 +348,7 @@ async function setupShrine(guild) {
         });
       }
     }
-    channels[info.name] = await ensureChannel(guild, mainCategory, info, overwrites);
+    channels[info.name] = await ensureChannel(guild, category, info, overwrites);
   }
 
   const staffNames = ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"];
