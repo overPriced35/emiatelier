@@ -560,7 +560,7 @@ const moderationCommands = [
     .addStringOption(o => o.setName("severity").setDescription("How much does this affect the experience?").addChoices(
       { name: "Low — minor issue", value: "Low" },
       { name: "Normal — feature partly affected", value: "Normal" },
-      { name: "High — blocks testing", value: "High" }
+      { name: "High — blocks a core feature", value: "High" }
     ).setRequired(true)),
   new SlashCommandBuilder().setName("feedback").setDescription("Privately share feedback about the server or bot.")
     .addStringOption(o => o.setName("topic").setDescription("What is your feedback about?").setMaxLength(100).setRequired(true))
