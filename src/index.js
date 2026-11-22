@@ -435,7 +435,7 @@ const moderationCommands = [
     .addUserOption(o => o.setName("member").setDescription("Member to ban").setRequired(true))
     .addStringOption(o => o.setName("reason").setDescription("Reason").setRequired(true)),
   new SlashCommandBuilder().setName("clear").setDescription("Bulk-delete recent messages (up to 100).")
-    .addIntegerOption(o => o.setName("amount").setDescription("Number of messages").setMinValue(1).setMaxValue(100).setRequired(true)),
+    .addIntegerOption(o => o.setName("amount").setDescription("Number of messages (2–100)").setMinValue(2).setMaxValue(100).setRequired(true)),
   new SlashCommandBuilder().setName("lock").setDescription("Prevent members from sending messages in this channel.")
     .addStringOption(o => o.setName("reason").setDescription("Reason").setRequired(false)),
   new SlashCommandBuilder().setName("unlock").setDescription("Restore member messaging in this channel."),
@@ -500,6 +500,14 @@ async function handleModerationCommand(interaction) {
   if (command === "warn") {
     if (memberUser.id === interaction.user.id || memberUser.id === client.user.id || memberUser.id === interaction.guild.ownerId) {
       return interaction.reply({ content: "You cannot issue a warning to that account.", flags: MessageFlags.Ephemeral });
+    }
+    const warningTarget = await interaction.guild.members.fetch(memberUser.id).catch(() => null);
+    if (!warningTarget) {
+      return interaction.reply({ content: "Warnings can only be issued to current server members.", flags: MessageFlags.Ephemeral });
+    }
+    if (interaction.guild.ownerId !== interaction.user.id &&
+        interaction.member.roles.highest.comparePositionTo(warningTarget.roles.highest) <= 0) {
+      return interaction.reply({ content: "You can only warn members whose highest role is below yours.", flags: MessageFlags.Ephemeral });
     }
     const list = getWarnings(config, interaction.guild.id, memberUser.id);
     const entry = { reason, moderatorId: interaction.user.id, at: new Date().toISOString() };
