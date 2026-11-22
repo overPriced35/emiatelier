@@ -318,10 +318,10 @@ async function setupShrine(guild) {
   await guild.roles.fetch();
 
   const mainCategory = await ensureCategory(guild, "⛩️・THE SHRINE");
-  const communityCategory = await ensureCategory(guild, "🌸・COMMUNITY HALL");
+  const communityCategory = await ensureCategory(guild, "🏮・COMMUNITY HALL");
   const creatorCategory = await ensureCategory(guild, "🎐・CREATOR'S CORNER");
-  const galleryCategory = await ensureCategory(guild, "🎀・COMMUNITY GALLERY");
-  const staffCategory = await ensureCategory(guild, "⛩️・SHRINE STAFF", [{
+  const galleryCategory = await ensureCategory(guild, "🎨・COMMUNITY GALLERY");
+  const staffCategory = await ensureCategory(guild, "🏯・SHRINE STAFF", [{
     id: guild.roles.everyone.id,
     deny: [PermissionFlagsBits.ViewChannel]
   }, {
@@ -330,6 +330,15 @@ async function setupShrine(guild) {
   }]);
 
   for (const info of rolePlan) await ensureRole(guild, info);
+  const botMember = await guild.members.fetch(client.user.id);
+  const botHighestRole = botMember.roles.highest;
+  if (botHighestRole.position <= rolePlan.length) {
+    throw new Error("Move Shrine Assistant's bot role higher in Server Settings → Roles before running setup.");
+  }
+  await guild.roles.setPositions(rolePlan.map((info, index) => ({
+    role: guild.roles.cache.find(role => role.name === info.name).id,
+    position: botHighestRole.position - 1 - index
+  })));
 
   const channels = {};
   const communityChannels = ["💬・general", "🎀・introductions", "🤖・bot-commands"];
@@ -392,7 +401,7 @@ async function setupShrine(guild) {
   }, staffReadOnlyPermissions(guild, ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]));
 
   channels["💡・suggestions"] = await ensureChannel(guild, communityCategory, { name: "💡・suggestions", topic: "Community ideas submitted through /suggest. React with 👍 to support an idea or 👎 if it is not a fit." }, standardChannelPermissions(guild, "readOnly"));
-  channels["💬・gallery-chat"] = await ensureChannel(guild, communityCategory, {
+  channels["💬・gallery-chat"] = await ensureChannel(guild, galleryCategory, {
     name: "💬・gallery-chat",
     topic: "Chat about gallery posts, share ideas, and give creators encouragement."
   }, standardChannelPermissions(guild, "chat"));
@@ -982,9 +991,20 @@ async function handleModerationCommand(interaction) {
   }
 }
 
+async function resetShrine(guild) {
+  await guild.channels.fetch();
+  await guild.roles.fetch();
+  const botMember = await guild.members.fetch(client.user.id);
+  const preservedRoleIds = new Set([guild.roles.everyone.id, ...botMember.roles.cache.map(role => role.id)]);
+  const channels = [...guild.channels.cache.values()].sort((a, b) => Number(a.type === ChannelType.GuildCategory) - Number(b.type === ChannelType.GuildCategory));
+  for (const channel of channels) await channel.delete("Fresh Atelier de Emi setup reset");
+  const roles = [...guild.roles.cache.values()].filter(role => !preservedRoleIds.has(role.id) && role.name !== "new role" && !role.managed).sort((a, b) => b.position - a.position);
+  for (const role of roles) if (role.editable) await role.delete("Fresh Atelier de Emi setup reset");
+  await setupShrine(guild);
+}
 const setupCommand = new SlashCommandBuilder()
   .setName("setup")
-  .setDescription("Set up the Atelier de Emi creative community.")
+  .setDescription("Rebuild the Atelier de Emi server from a clean slate.")
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 client.once("clientReady", async () => {
@@ -1001,6 +1021,22 @@ client.once("clientReady", async () => {
 });
 
 client.on("interactionCreate", async (interaction) => {
+  if (interaction.isButton() && interaction.customId.startsWith("setup_reset_")) {
+    const [action, ownerId] = interaction.customId.replace("setup_reset_", "").split(":");
+    if (interaction.user.id !== ownerId) return interaction.reply({ content: "Only the administrator who started this reset can confirm it.", flags: MessageFlags.Ephemeral });
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "You need Administrator permission to reset the server.", flags: MessageFlags.Ephemeral });
+    if (action === "cancel") return interaction.update({ content: "୨୧ Reset cancelled. Nothing in the server was changed.", components: [] });
+    await interaction.update({ content: "୨୧ Fresh shrine setup started. I am rebuilding channels and roles now…", components: [] });
+    try {
+      await resetShrine(interaction.guild);
+      await interaction.editReply({ content: "୨୧ Fresh setup complete! Your categories, channels, roles, permissions and welcome panels are ready.", components: [] });
+    } catch (error) {
+      console.error("Fresh setup failed:", error);
+      await interaction.editReply({ content: "Setup stopped partway through: " + error.message + ". Check the bot permissions and role hierarchy, then send me the PowerShell error.", components: [] }).catch(() => {});
+    }
+    return;
+  }
+
   if (interaction.isButton() && interaction.customId.startsWith("selfrole_")) {
     const choice = selfRoleButtons.find((item) => item.id === interaction.customId);
     if (!choice || !interaction.inGuild()) return;
@@ -1036,16 +1072,15 @@ client.on("interactionCreate", async (interaction) => {
       flags: MessageFlags.Ephemeral
     });
   }
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  try {
-    await setupShrine(interaction.guild);
-    await interaction.editReply("୨୧ Your shrine is ready! Channels, roles, and embeds are in place.");
-  } catch (error) {
-    console.error("Setup failed:", error);
-    await interaction.editReply(
-      "Setup failed. Check that I have Manage Roles, Manage Channels, View Channels, Send Messages, Embed Links, and Read Message History permissions. Also make sure my bot role is above the roles it needs to create."
-    );
-  }
+  const confirmRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId("setup_reset_confirm:" + interaction.user.id).setLabel("Delete and rebuild server").setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId("setup_reset_cancel:" + interaction.user.id).setLabel("Cancel").setStyle(ButtonStyle.Secondary)
+  );
+  return interaction.reply({
+    content: "୨୧ **Fresh server reset**\n\nThis permanently deletes every channel and category, plus every role except @everyone, Shrine Assistant bot-assigned roles, managed integration roles, and the lowercase new role. All messages, forum posts, and member role assignments will be lost. The complete Atelier de Emi layout will then be recreated.\n\nAre you sure you want to continue?",
+    components: [confirmRow],
+    flags: MessageFlags.Ephemeral
+  });
 });
 
 client.on("guildMemberAdd", async (member) => {
