@@ -212,8 +212,9 @@ async function ensureChannel(guild, category, info, permissionOverwrites) {
       }
       await legacyTextChannel.edit({
         name: archiveName,
-        topic: "Archived messages from the former announcements channel. New announcements are posted in 📢・announcements."
-      }, { reason: "Preserve existing messages while creating the native announcement channel" });
+        topic: "Archived messages from the former announcements channel. New announcements are posted in 📢・announcements.",
+        reason: "Preserve existing messages while creating the native announcement channel"
+      });
     }
   }
   if (!channel) {
