@@ -303,6 +303,11 @@ async function setupShrine(guild) {
     topic: "Chat about gallery posts, share ideas, and give creators encouragement."
   });
 
+  channels[moderationLogName] = await ensureChannel(guild, staffCategory, {
+    name: moderationLogName,
+    topic: "Private audit trail for moderation actions taken by Shrine Assistant."
+  }, staffChannelPermissions(guild, ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]));
+
   const staffChannels = [
     { name: "🔒・guuji-office", topic: "Private office for the Guuji.", roles: ["⛩️・Guuji"] },
     { name: "🌸・senior-shrine-maiden", topic: "Private coordination for senior shrine staff.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden"] },
@@ -329,6 +334,175 @@ async function setupShrine(guild) {
   };
   writeConfig(config);
 }
+
+const moderationLogName = "📋・moderation-logs";
+const moderationCommands = [
+  new SlashCommandBuilder().setName("warn").setDescription("Issue a formal member warning.")
+    .addUserOption(o => o.setName("member").setDescription("Member to warn").setRequired(true))
+    .addStringOption(o => o.setName("reason").setDescription("Reason for the warning").setRequired(true)),
+  new SlashCommandBuilder().setName("warnings").setDescription("View a member's warning history.")
+    .addUserOption(o => o.setName("member").setDescription("Member to check").setRequired(true)),
+  new SlashCommandBuilder().setName("clearwarnings").setDescription("Clear a member's warning history.")
+    .addUserOption(o => o.setName("member").setDescription("Member to clear").setRequired(true)),
+  new SlashCommandBuilder().setName("timeout").setDescription("Temporarily timeout a member.")
+    .addUserOption(o => o.setName("member").setDescription("Member to timeout").setRequired(true))
+    .addIntegerOption(o => o.setName("minutes").setDescription("Duration in minutes (1–40320)").setMinValue(1).setMaxValue(40320).setRequired(true))
+    .addStringOption(o => o.setName("reason").setDescription("Reason").setRequired(true)),
+  new SlashCommandBuilder().setName("untimeout").setDescription("Remove a member's timeout.")
+    .addUserOption(o => o.setName("member").setDescription("Member to untimeout").setRequired(true))
+    .addStringOption(o => o.setName("reason").setDescription("Reason").setRequired(false)),
+  new SlashCommandBuilder().setName("kick").setDescription("Remove a member from the server.")
+    .addUserOption(o => o.setName("member").setDescription("Member to kick").setRequired(true))
+    .addStringOption(o => o.setName("reason").setDescription("Reason").setRequired(true)),
+  new SlashCommandBuilder().setName("ban").setDescription("Ban a member from the server.")
+    .addUserOption(o => o.setName("member").setDescription("Member to ban").setRequired(true))
+    .addStringOption(o => o.setName("reason").setDescription("Reason").setRequired(true)),
+  new SlashCommandBuilder().setName("clear").setDescription("Bulk-delete recent messages (up to 100).")
+    .addIntegerOption(o => o.setName("amount").setDescription("Number of messages").setMinValue(1).setMaxValue(100).setRequired(true)),
+  new SlashCommandBuilder().setName("lock").setDescription("Prevent members from sending messages in this channel.")
+    .addStringOption(o => o.setName("reason").setDescription("Reason").setRequired(false)),
+  new SlashCommandBuilder().setName("unlock").setDescription("Restore member messaging in this channel."),
+  new SlashCommandBuilder().setName("slowmode").setDescription("Set channel slowmode in seconds.")
+    .addIntegerOption(o => o.setName("seconds").setDescription("0 to disable; maximum 21600").setMinValue(0).setMaxValue(21600).setRequired(true)),
+  new SlashCommandBuilder().setName("userinfo").setDescription("View basic information about a server member.")
+    .addUserOption(o => o.setName("member").setDescription("Member to inspect").setRequired(false))
+].map(command => command.toJSON());
+
+function getWarnings(config, guildId, userId) {
+  return config[guildId]?.warnings?.[userId] || [];
+}
+
+async function sendModerationLog(guild, title, description, color = purple) {
+  const logChannel = guild.channels.cache.find(channel =>
+    channel.type === ChannelType.GuildText && channel.name === moderationLogName
+  );
+  if (!logChannel) return;
+  const embed = new EmbedBuilder().setColor(color).setTitle(title)
+    .setDescription(description).setTimestamp();
+  await logChannel.send({ embeds: [embed] }).catch(console.error);
+}
+
+async function handleModerationCommand(interaction) {
+  const command = interaction.commandName;
+  const memberUser = interaction.options.getUser("member");
+  const reason = interaction.options.getString("reason") || "No reason provided";
+  const config = readConfig();
+  const guildData = config[interaction.guild.id] ||= {};
+  guildData.warnings ||= {};
+
+  if (command === "userinfo") {
+    const user = memberUser || interaction.user;
+    const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+    if (!member) return interaction.reply({ content: "I couldn't find that member in this server.", flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Member information")
+      .setThumbnail(user.displayAvatarURL({ size: 256 }))
+      .addFields(
+        { name: "Member", value: user.tag, inline: true },
+        { name: "User ID", value: user.id, inline: true },
+        { name: "Joined server", value: member.joinedAt ? "<t:" + Math.floor(member.joinedAt.getTime() / 1000) + ":R>" : "Unknown", inline: true },
+        { name: "Account created", value: "<t:" + Math.floor(user.createdAt.getTime() / 1000) + ":R>", inline: true },
+        { name: "Roles", value: member.roles.cache.filter(role => role.id !== interaction.guild.id).map(role => role.toString()).join(", ").slice(0, 1000) || "None" }
+      );
+    return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "warn") {
+    const list = getWarnings(config, interaction.guild.id, memberUser.id);
+    const entry = { reason, moderatorId: interaction.user.id, at: new Date().toISOString() };
+    list.push(entry);
+    guildData.warnings[memberUser.id] = list;
+    writeConfig(config);
+    await sendModerationLog(interaction.guild, "୨୧ Member warned", "**Member:** " + memberUser.toString() + "\n**Moderator:** " + interaction.user.toString() + "\n**Reason:** " + reason + "\n**Warnings on record:** " + list.length, 0xE9D6A5);
+    return interaction.reply({ content: "୨୧ Warning recorded for " + memberUser.toString() + ". They now have **" + list.length + "** warning(s) on record.", flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "warnings" || command === "clearwarnings") {
+    const list = getWarnings(config, interaction.guild.id, memberUser.id);
+    if (command === "warnings") {
+      if (!list.length) return interaction.reply({ content: "୨୧ No warnings are recorded for " + memberUser.toString() + ".", flags: MessageFlags.Ephemeral });
+      const description = list.slice(-10).map((entry, index) =>
+        "**" + (index + 1) + ".** " + entry.reason + "\nModerator: <@" + entry.moderatorId + "> • <t:" + Math.floor(new Date(entry.at).getTime() / 1000) + ":R>"
+      ).join("\n\n");
+      const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Warning history: " + memberUser.username)
+        .setDescription(description).setFooter({ text: list.length + " warning(s) on record; showing the latest 10" });
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    }
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.ModerateMembers)) {
+      return interaction.reply({ content: "You need Moderate Members permission to clear warnings.", flags: MessageFlags.Ephemeral });
+    }
+    delete guildData.warnings[memberUser.id];
+    writeConfig(config);
+    await sendModerationLog(interaction.guild, "୨୧ Warning history cleared", "**Member:** " + memberUser.toString() + "\n**Moderator:** " + interaction.user.toString());
+    return interaction.reply({ content: "୨୧ Cleared the warning history for " + memberUser.toString() + ".", flags: MessageFlags.Ephemeral });
+  }
+
+  const target = memberUser ? await interaction.guild.members.fetch(memberUser.id).catch(() => null) : null;
+  if (["timeout", "untimeout", "kick", "ban"].includes(command) && !target) {
+    return interaction.reply({ content: "I couldn't find that member in this server.", flags: MessageFlags.Ephemeral });
+  }
+  if (target && (target.id === interaction.user.id || target.id === client.user.id || target.id === interaction.guild.ownerId)) {
+    return interaction.reply({ content: "That member cannot be targeted with this command.", flags: MessageFlags.Ephemeral });
+  }
+  if (target && interaction.member.roles.highest.comparePositionTo(target.roles.highest) <= 0 && interaction.guild.ownerId !== interaction.user.id) {
+    return interaction.reply({ content: "You can only moderate members whose highest role is below yours.", flags: MessageFlags.Ephemeral });
+  }
+
+  try {
+    if (command === "timeout") {
+      if (!interaction.memberPermissions.has(PermissionFlagsBits.ModerateMembers)) throw new Error("You need Moderate Members permission.");
+      const minutes = interaction.options.getInteger("minutes");
+      await target.timeout(minutes * 60 * 1000, reason);
+      await sendModerationLog(interaction.guild, "୨୧ Member timed out", "**Member:** " + memberUser.toString() + "\n**Moderator:** " + interaction.user.toString() + "\n**Duration:** " + minutes + " minutes\n**Reason:** " + reason, 0xE9D6A5);
+      return interaction.reply({ content: "୨୧ Timed out " + memberUser.toString() + " for **" + minutes + " minutes**.", flags: MessageFlags.Ephemeral });
+    }
+    if (command === "untimeout") {
+      if (!interaction.memberPermissions.has(PermissionFlagsBits.ModerateMembers)) throw new Error("You need Moderate Members permission.");
+      await target.timeout(null, reason);
+      await sendModerationLog(interaction.guild, "୨୧ Timeout removed", "**Member:** " + memberUser.toString() + "\n**Moderator:** " + interaction.user.toString() + "\n**Reason:** " + reason);
+      return interaction.reply({ content: "୨୧ Removed the timeout for " + memberUser.toString() + ".", flags: MessageFlags.Ephemeral });
+    }
+    if (command === "kick") {
+      if (!interaction.memberPermissions.has(PermissionFlagsBits.KickMembers)) throw new Error("You need Kick Members permission.");
+      await target.kick(reason);
+      await sendModerationLog(interaction.guild, "୨୧ Member kicked", "**Member:** " + memberUser.tag + "\n**Moderator:** " + interaction.user.toString() + "\n**Reason:** " + reason, 0xD98B8B);
+      return interaction.reply({ content: "୨୧ Kicked **" + memberUser.tag + "**.", flags: MessageFlags.Ephemeral });
+    }
+    if (command === "ban") {
+      if (!interaction.memberPermissions.has(PermissionFlagsBits.BanMembers)) throw new Error("You need Ban Members permission.");
+      await interaction.guild.members.ban(memberUser.id, { reason });
+      await sendModerationLog(interaction.guild, "୨୧ Member banned", "**Member:** " + memberUser.tag + "\n**Moderator:** " + interaction.user.toString() + "\n**Reason:** " + reason, 0xD98B8B);
+      return interaction.reply({ content: "୨୧ Banned **" + memberUser.tag + "**.", flags: MessageFlags.Ephemeral });
+    }
+    if (command === "clear") {
+      if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageMessages)) throw new Error("You need Manage Messages permission.");
+      const amount = interaction.options.getInteger("amount");
+      const deleted = await interaction.channel.bulkDelete(amount, true);
+      await sendModerationLog(interaction.guild, "୨୧ Messages cleared", "**Moderator:** " + interaction.user.toString() + "\n**Channel:** " + interaction.channel.toString() + "\n**Deleted:** " + deleted.size);
+      return interaction.reply({ content: "୨୧ Deleted **" + deleted.size + "** recent messages. Messages older than 14 days cannot be bulk-deleted.", flags: MessageFlags.Ephemeral });
+    }
+    if (command === "lock" || command === "unlock") {
+      if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageChannels)) throw new Error("You need Manage Channels permission.");
+      const everyone = interaction.guild.roles.everyone;
+      await interaction.channel.permissionOverwrites.edit(everyone, {
+        SendMessages: command === "unlock" ? null : false,
+        CreatePublicThreads: command === "unlock" ? null : false,
+        CreatePrivateThreads: command === "unlock" ? null : false
+      }, { reason: command === "lock" ? reason : "Channel unlocked by " + interaction.user.tag });
+      await sendModerationLog(interaction.guild, command === "lock" ? "୨୧ Channel locked" : "୨୧ Channel unlocked", "**Moderator:** " + interaction.user.toString() + "\n**Channel:** " + interaction.channel.toString());
+      return interaction.reply({ content: command === "lock" ? "୨୧ This channel is now locked for @everyone." : "୨୧ This channel has been unlocked for @everyone.", flags: MessageFlags.Ephemeral });
+    }
+    if (command === "slowmode") {
+      if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageChannels)) throw new Error("You need Manage Channels permission.");
+      const seconds = interaction.options.getInteger("seconds");
+      await interaction.channel.setRateLimitPerUser(seconds, "Slowmode set by " + interaction.user.tag);
+      await sendModerationLog(interaction.guild, "୨୧ Slowmode updated", "**Moderator:** " + interaction.user.toString() + "\n**Channel:** " + interaction.channel.toString() + "\n**Slowmode:** " + seconds + " seconds");
+      return interaction.reply({ content: "୨୧ Slowmode set to **" + seconds + " seconds**.", flags: MessageFlags.Ephemeral });
+    }
+  } catch (error) {
+    return interaction.reply({ content: "I couldn't complete that action: " + error.message, flags: MessageFlags.Ephemeral }).catch(() => {});
+  }
+}
+
 const setupCommand = new SlashCommandBuilder()
   .setName("setup")
   .setDescription("Create the Emi Atelier shrine server template.")
@@ -339,7 +513,7 @@ client.once("clientReady", async () => {
   try {
     const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
-      body: [setupCommand.toJSON()]
+      body: [setupCommand.toJSON(), ...moderationCommands]
     });
     console.log("Registered /setup.");
   } catch (error) {
@@ -368,6 +542,11 @@ client.on("interactionCreate", async (interaction) => {
       await member.roles.add(role, "Member used the self-role panel");
       await interaction.editReply("୨୧ Added **" + role.name + "** to your roles!");
     }
+    return;
+  }
+
+  if (interaction.isChatInputCommand() && interaction.commandName !== "setup") {
+    await handleModerationCommand(interaction);
     return;
   }
 
