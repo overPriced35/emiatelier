@@ -528,7 +528,7 @@ async function setupShrine(guild) {
   // Set Discord's native Community channel assignments and server description.
   const guujiOffice = channels["🔒・guuji-office"];
   await guild.edit({
-    description: "A creative community for cosplay, art, photography, crafting and more, inspired by Emi Atelier and the Grand Narukami Shrine.",
+    description: "A creative home for cosplay, art, photography and crafting, inspired by Emi Atelier and the Grand Narukami Shrine.",
     rulesChannel: channels["📜・rules"],
     publicUpdatesChannel: guujiOffice,
     safetyAlertsChannel: guujiOffice,
