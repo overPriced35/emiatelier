@@ -49,22 +49,23 @@ const rulesEmbed = () => new EmbedBuilder()
 
 
 const rolePlan = [
-  // Staff roles are never self-assignable. Assign these manually to trusted people.
-  { name: "👑・Owner", color: 0xE8A2C8, permissions: [PermissionFlagsBits.Administrator] },
-  { name: "🌸・Administrator", color: 0xE6A0B4, permissions: [
+  // Staff roles are assigned manually to trusted people only.
+  { name: "⛩️・Guuji", color: 0xE8A2C8, permissions: [PermissionFlagsBits.Administrator] },
+  { name: "🌸・Senior Shrine Maiden", color: 0xE6A0B4, permissions: [
     PermissionFlagsBits.ManageGuild, PermissionFlagsBits.ManageChannels,
     PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ManageMessages,
     PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.ViewAuditLog
   ] },
-  { name: "🛡️・Moderator", color: 0xB69AD8, permissions: [
+  { name: "🦊・Shrine Maiden", color: 0xB69AD8, permissions: [
     PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ModerateMembers,
     PermissionFlagsBits.ViewAuditLog
   ] },
+  { name: "🪷・Miko Apprentice", color: 0xD9B8E8, permissions: [] },
   { name: "🎀・Cosplayer", color: 0xF4B8CF, selfAssignable: true },
   { name: "🎨・Artist", color: 0xE8B7D2, selfAssignable: true },
   { name: "📸・Photographer", color: 0xB8C6E8, selfAssignable: true },
   { name: "🧵・Crafter", color: 0xD9B8A7, selfAssignable: true },
-  { name: "✨・Community", color: 0xE9D6A5 },
+  { name: "✨・Shrine Visitor", color: 0xE9D6A5 },
   { name: "🌱・New Arrival", color: 0xA9D8C8 },
   { name: "📢・Announcement Pings", color: 0xF1C7A8, mentionable: true, selfAssignable: true },
   { name: "🎉・Event Pings", color: 0xC8B6E8, mentionable: true, selfAssignable: true }
@@ -264,7 +265,7 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("guildMemberAdd", async (member) => {
-  const communityRole = member.guild.roles.cache.find((role) => role.name === "✨・Community");
+  const communityRole = member.guild.roles.cache.find((role) => role.name === "✨・Shrine Visitor");
   if (communityRole && communityRole.editable) {
     await member.roles.add(communityRole, "Automatic community member role on joining").catch(console.error);
   }
