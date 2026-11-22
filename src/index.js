@@ -76,7 +76,7 @@ const staffGuideEmbed = () => new EmbedBuilder()
     { name: "Warnings", value: "`/warn member reason` — record a warning\n`/warnings member` — view warning history\n`/clearwarnings member` — clear recorded warnings", inline: false },
     { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\n`/untimeout member reason` — remove a timeout\n`/kick member reason` — remove a member\n`/ban member reason` — ban a member", inline: false },
     { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\n`/lock reason` and `/unlock` — lock or restore the current channel\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
-    { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event", inline: false },
+    { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event\\n`/event-cancel` — cancel a scheduled event", inline: false },
     { name: "Community support", value: "`/bug-report` — privately report a bot or server issue\n`/feedback` — privately share feedback about the community or bot\n`/report` — privately contact staff about a concern", inline: false },
     { name: "Information", value: "`/userinfo member` — view basic member information\n`/staffhelp` — show this guide", inline: false },
     { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
@@ -92,7 +92,7 @@ const rolePlan = [
   { name: "⛩️・Guuji", color: 0xE8A2C8, permissions: [PermissionFlagsBits.Administrator] },
   { name: "🌸・Senior Shrine Maiden", color: 0xE6A0B4, permissions: [
     PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ModerateMembers,
-    PermissionFlagsBits.KickMembers, PermissionFlagsBits.ViewAuditLog
+    PermissionFlagsBits.KickMembers, PermissionFlagsBits.ViewAuditLog, PermissionFlagsBits.ManageEvents
   ] },
   { name: "🦊・Shrine Maiden", color: 0xB69AD8, permissions: [
     PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ModerateMembers
@@ -573,6 +573,9 @@ const moderationCommands = [
     .addStringOption(o => o.setName("location").setDescription("Where the event takes place (online or venue)").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("description").setDescription("What members can expect").setMaxLength(1000).setRequired(false)),
   new SlashCommandBuilder().setName("events").setDescription("See upcoming Atelier de Emi community events."),
+  new SlashCommandBuilder().setName("event-cancel").setDescription("Cancel a scheduled community event (staff only).")
+    .addStringOption(o => o.setName("event_id").setDescription("ID shown by /events").setMaxLength(25).setRequired(true))
+    .addStringOption(o => o.setName("reason").setDescription("Why the event is being cancelled").setMaxLength(300).setRequired(false)),
   new SlashCommandBuilder().setName("prompt").setDescription("Publish a creative prompt for the community (staff only).")
     .addStringOption(o => o.setName("title").setDescription("Short name for the prompt").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("theme").setDescription("Cosplay, art, photography, crafting or anything goes").setMaxLength(80).setRequired(true))
@@ -893,10 +896,33 @@ async function handleModerationCommand(interaction) {
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Upcoming at Atelier de Emi")
       .setDescription(upcoming.map(event =>
         "**" + event.name + "**\n<t:" + Math.floor(event.scheduledStartTimestamp / 1000) + ":F> • " +
-        (event.entityMetadata?.location || "Location to be announced") + "\n[View event](" + event.url + ")"
+        (event.entityMetadata?.location || "Location to be announced") + "\n[View event](" + event.url + ") • ID: `" + event.id + "`"
       ).join("\n\n"))
       .setFooter({ text: "Open an event to mark yourself as interested ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "event-cancel") {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageEvents)) {
+      return interaction.reply({ content: "Only event managers and shrine staff can cancel community events.", flags: MessageFlags.Ephemeral });
+    }
+    const eventId = interaction.options.getString("event_id", true).trim();
+    const reason = interaction.options.getString("reason") || "Cancelled by " + interaction.user.tag;
+    if (!/^\\d{17,20}$/.test(eventId)) {
+      return interaction.reply({ content: "Please provide the numeric event ID shown by /events.", flags: MessageFlags.Ephemeral });
+    }
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    try {
+      const event = await interaction.guild.scheduledEvents.fetch(eventId).catch(() => null);
+      if (!event) return interaction.editReply("I couldn't find that scheduled event. It may already have ended or been removed.");
+      const eventName = event.name;
+      await event.delete(reason);
+      await sendModerationLog(interaction.guild, "୨୧ Community event cancelled", "**Event:** " + eventName + "\\n**Event ID:** " + eventId + "\\n**Cancelled by:** " + interaction.user.toString() + "\\n**Reason:** " + reason, 0xD98B8B);
+      return interaction.editReply("୨୧ **" + eventName + "** has been cancelled and removed from the server's event list.");
+    } catch (error) {
+      console.error("Event cancellation failed:", error);
+      return interaction.editReply("I couldn't cancel that event. Please check my Manage Events permission and try again.");
+    }
   }
 
   if (command === "help") {
@@ -904,7 +930,7 @@ async function handleModerationCommand(interaction) {
       .setDescription("Hello! I help keep Atelier de Emi organised and welcoming.")
       .addFields(
         { name: "Emi Atelier", value: "`/emi-update` — publish a creator update (owner only)", inline: false },
-        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`🆘・contact-staff` — open a private support conversation\n`/bug-report` — privately report a bot/server issue\n`/feedback` — privately share community feedback\n`/icebreaker` — post a fun conversation starter\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/project-update project progress link` — share your creative progress\n`/feedback-request project question link` — ask for constructive feedback\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators page` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
+        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`🆘・contact-staff` — open a private support conversation\n`/bug-report` — privately report a bot/server issue\n`/feedback` — privately share community feedback\n`/icebreaker` — post a fun conversation starter\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events (includes event IDs for staff)\n`/project-update project progress link` — share your creative progress\n`/feedback-request project question link` — ask for constructive feedback\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators page` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
         { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Browse 🎐・creative-prompts for inspiration, then share your take in the Community Gallery!", inline: false }
       ).setFooter({ text: "Emi Atelier • shrine-inspired, creator-friendly • everyone is welcome ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
