@@ -553,6 +553,7 @@ const moderationCommands = [
   new SlashCommandBuilder().setName("staffhelp").setDescription("Show the Shrine Assistant staff command guide."),
   new SlashCommandBuilder().setName("help").setDescription("See what Shrine Assistant can help you with."),
   new SlashCommandBuilder().setName("serverinfo").setDescription("Learn about the Atelier de Emi community."),
+  new SlashCommandBuilder().setName("ping").setDescription("Check Shrine Assistant response and connection status."),
   new SlashCommandBuilder().setName("suggest").setDescription("Send an idea to the Atelier de Emi team.")
     .addStringOption(o => o.setName("idea").setDescription("Your suggestion for the community").setMaxLength(1000).setRequired(true)),
   new SlashCommandBuilder().setName("report").setDescription("Privately contact shrine staff about a concern.")
@@ -929,12 +930,24 @@ async function handleModerationCommand(interaction) {
     }
   }
 
+  if (command === "ping") {
+    const latency = Math.round(client.ws.ping);
+    const startedAt = client.readyAt ? Math.floor(client.readyAt.getTime() / 1000) : null;
+    const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Shrine Assistant status")
+      .addFields(
+        { name: "Gateway latency", value: latency >= 0 ? latency + " ms" : "Connecting", inline: true },
+        { name: "Bot uptime", value: startedAt ? "<t:" + startedAt + ":R>" : "Unavailable", inline: true }
+      )
+      .setFooter({ text: "Atelier de Emi • if something seems wrong, use /bug-report ♡" });
+    return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  }
+
   if (command === "help") {
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Shrine Assistant — help")
       .setDescription("Hello! I help keep Atelier de Emi organised and welcoming.")
       .addFields(
         { name: "Emi Atelier", value: "`/emi-update` — publish a creator update (owner only)", inline: false },
-        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`🆘・contact-staff` — open a private support conversation\n`/bug-report` — privately report a bot/server issue\n`/feedback` — privately share community feedback\n`/icebreaker` — post a fun conversation starter\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events (includes event IDs for staff)\n`/project-update project progress link` — share your creative progress\n`/feedback-request project question link` — ask for constructive feedback\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators page` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
+        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`🆘・contact-staff` — open a private support conversation\n`/bug-report` — privately report a bot/server issue\n`/feedback` — privately share community feedback\n`/icebreaker` — post a fun conversation starter\n`/serverinfo` — learn about this community\n`/ping` — check Shrine Assistant connection status\n`/events` — see upcoming community events (includes event IDs for staff)\n`/project-update project progress link` — share your creative progress\n`/feedback-request project question link` — ask for constructive feedback\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators page` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
         { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Browse 🎐・creative-prompts for inspiration, then share your take in the Community Gallery!", inline: false }
       ).setFooter({ text: "Emi Atelier • shrine-inspired, creator-friendly • everyone is welcome ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
