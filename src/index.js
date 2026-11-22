@@ -207,7 +207,7 @@ const setupCommand = new SlashCommandBuilder()
   .setDescription("Create the Emi Atelier shrine server template.")
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-client.once("ready", async () => {
+client.once("clientReady", async () => {
   console.log("Logged in as " + client.user.tag);
   try {
     const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
