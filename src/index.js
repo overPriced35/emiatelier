@@ -81,6 +81,7 @@ const staffGuideEmbed = () => new EmbedBuilder()
     { name: "Information", value: "`/userinfo member` — view basic member information\n`/staffhelp` — show this guide", inline: false },
     { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
     { name: "Community feedback workflow", value: "Review bug reports and feedback in 🛠️・community-feedback. Acknowledge useful reports, reproduce issues where possible, record what happened and what changed, and keep private submissions within staff.", inline: false },
+    { name: "Support conversations", value: "Members can open private tickets in 🆘・contact-staff. Use Claim conversation to take ownership, keep replies in the private channel, and use Close conversation when resolved. Closed conversations remain read-only for the member and are recorded in moderation logs.", inline: false },
     { name: "Staff expectations", value: "Keep reasons professional, do not share staff-only information, and escalate uncertain or serious cases to the Guuji. Never use moderation tools to settle personal disagreements.", inline: false }
   )
   .setFooter({ text: "Atelier de Emi • internal staff reference" });
