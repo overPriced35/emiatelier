@@ -28,7 +28,7 @@ const purple = 0xC9B6E4;
 const welcomeEmbed = (guild) => new EmbedBuilder()
   .setColor(pink)
   .setTitle("୨୧ Welcome to the shrine!")
-  .setDescription("A little corner for cosplay, creativity, and good company.\n\n♡ Read the rules\n♡ Introduce yourself\n♡ Share your projects and enjoy your stay!")
+  .setDescription("Welcome to Emi Atelier — a creative community inspired by Yae Miko and the Grand Narukami Shrine.\n\n♡ Meet fellow cosplayers and creators\n♡ Share cosplay, art, photography and crafts\n♡ Find inspiration, make friends and have fun\n\nNo Genshin knowledge required. Everyone is welcome!")
   .setThumbnail(guild.iconURL({ size: 256 }))
   .setFooter({ text: "Emi Atelier • made with love" })
   .setTimestamp();
@@ -154,7 +154,8 @@ const channelPlan = [
   { name: "💬・general", topic: "Chat, meet people, and make yourself at home." },
   { name: "🎀・introductions", topic: "Tell the community a little about yourself." },
   { name: "🎭・choose-roles", topic: "Choose your own community and notification roles." },
-  { name: "🤖・bot-commands", topic: "A home for bot commands." }
+  { name: "🤖・bot-commands", topic: "A home for Shrine Assistant commands and helpful tools." },
+  { name: "💡・suggestions", topic: "Community ideas submitted through /suggest." }
 ];
 
 async function ensureCategory(guild, name, permissionOverwrites) {
@@ -381,8 +382,11 @@ async function setupShrine(guild) {
     topic: "Private audit trail for moderation actions taken by Shrine Assistant."
   }, staffReadOnlyPermissions(guild, ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]));
 
+  channels["💡・suggestions"] = await ensureChannel(guild, mainCategory, { name: "💡・suggestions", topic: "Community ideas submitted through /suggest." }, standardChannelPermissions(guild, "readOnly"));
+
   const staffChannels = [
     { name: "📖・staff-command-guide", topic: "Private reference for Shrine Assistant staff commands and moderation expectations.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden", "🪷・Miko Apprentice"] },
+    { name: "📨・member-reports", topic: "Private reports and support requests submitted to Shrine Assistant.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
     { name: "🔒・guuji-office", topic: "Private office for the Guuji.", roles: ["⛩️・Guuji"] },
     { name: "🌸・senior-shrine-maiden", topic: "Private coordination for senior shrine staff.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden"] },
     { name: "🦊・shrine-maiden-office", topic: "Staff coordination for shrine maidens.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
@@ -403,6 +407,7 @@ async function setupShrine(guild) {
 
   const config = readConfig();
   config[guild.id] = {
+    ...(config[guild.id] || {}),
     categoryId: mainCategory.id,
     welcomeChannelId: channels["🌸・welcome"].id,
     roleChannelId: channels["🎭・choose-roles"].id,
@@ -443,7 +448,13 @@ const moderationCommands = [
     .addIntegerOption(o => o.setName("seconds").setDescription("0 to disable; maximum 21600").setMinValue(0).setMaxValue(21600).setRequired(true)),
   new SlashCommandBuilder().setName("userinfo").setDescription("View basic information about a server member.")
     .addUserOption(o => o.setName("member").setDescription("Member to inspect").setRequired(false)),
-  new SlashCommandBuilder().setName("staffhelp").setDescription("Show the Shrine Assistant staff command guide.")
+  new SlashCommandBuilder().setName("staffhelp").setDescription("Show the Shrine Assistant staff command guide."),
+  new SlashCommandBuilder().setName("help").setDescription("See what Shrine Assistant can help you with."),
+  new SlashCommandBuilder().setName("serverinfo").setDescription("Learn about the Emi Atelier community."),
+  new SlashCommandBuilder().setName("suggest").setDescription("Send an idea to the Emi Atelier team.")
+    .addStringOption(o => o.setName("idea").setDescription("Your suggestion for the community").setMaxLength(1000).setRequired(true)),
+  new SlashCommandBuilder().setName("report").setDescription("Privately contact shrine staff about a concern.")
+    .addStringOption(o => o.setName("details").setDescription("Tell staff what happened").setMaxLength(1500).setRequired(true))
 ].map(command => command.toJSON());
 
 function getWarnings(config, guildId, userId) {
@@ -467,6 +478,53 @@ async function handleModerationCommand(interaction) {
   const config = readConfig();
   const guildData = config[interaction.guild.id] ||= {};
   guildData.warnings ||= {};
+
+  if (command === "help") {
+    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Shrine Assistant — help")
+      .setDescription("Hello! I help keep Emi Atelier organised and welcoming.")
+      .addFields(
+        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/userinfo` — view member information", inline: false },
+        { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Share your creativity in the Community Gallery!", inline: false }
+      ).setFooter({ text: "Inspired by Yae Miko and the Grand Narukami Shrine • everyone is welcome ♡" });
+    return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "serverinfo") {
+    const guild = interaction.guild;
+    const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Welcome to " + guild.name)
+      .setThumbnail(guild.iconURL({ size: 256 }))
+      .setDescription("A creative community inspired by Yae Miko and the Grand Narukami Shrine. Meet fellow creators, share your work and enjoy the community — no Genshin knowledge required.")
+      .addFields(
+        { name: "Members", value: String(guild.memberCount), inline: true },
+        { name: "Created", value: "<t:" + Math.floor(guild.createdTimestamp / 1000) + ":D>", inline: true },
+        { name: "Explore", value: "Cosplay • Art • Photography • Crafting • Community", inline: false }
+      ).setFooter({ text: "Emi Atelier • create, connect and enjoy ♡" });
+    return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "suggest") {
+    const idea = interaction.options.getString("idea", true);
+    const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "💡・suggestions");
+    if (!channel) return interaction.reply({ content: "The suggestions channel is not set up yet. Please ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Community suggestion")
+      .setDescription(idea).addFields({ name: "Submitted by", value: interaction.user.toString() })
+      .setFooter({ text: "Emi Atelier • thank you for helping the community grow ♡" }).setTimestamp();
+    await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
+    return interaction.reply({ content: "Thank you! Your idea has been shared in 💡・suggestions.", flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "report") {
+    const details = interaction.options.getString("details", true);
+    const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "📨・member-reports");
+    if (!channel) return interaction.reply({ content: "The private report channel is not set up yet. Please contact a shrine staff member directly.", flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(0xD98B8B).setTitle("୨୧ Private member report")
+      .setDescription(details).addFields(
+        { name: "Submitted by", value: interaction.user.tag + " (" + interaction.user.id + ")" },
+        { name: "Where", value: interaction.channel ? interaction.channel.toString() : "Not available" }
+      ).setTimestamp();
+    await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
+    return interaction.reply({ content: "Your report has been sent privately to the shrine staff. Thank you for letting us know.", flags: MessageFlags.Ephemeral });
+  }
 
   if (command === "staffhelp") {
     if (!interaction.member.roles.cache.some(role => ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden", "🪷・Miko Apprentice"].includes(role.name))) {
