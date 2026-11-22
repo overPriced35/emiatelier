@@ -802,13 +802,13 @@ async function handleModerationCommand(interaction) {
     for (const [userId, profile] of pageEntries) {
       const member = await interaction.guild.members.fetch(userId).catch(() => null);
       if (!member) continue;
-      lines.push("**" + member.displayName + "** — " + profile.interests + "\n" + profile.about.slice(0, 180) + "\nUse /profile-view member:" + member.user.username + " to see their full profile.");
+      lines.push("**" + member.displayName + "** — " + profile.interests + "\n" + profile.about.slice(0, 180) + "\nUse /profile-view and choose this creator to see their full profile.");
     }
     if (!lines.length) return interaction.reply({ content: "There are no currently available creator profiles on this page.", flags: MessageFlags.Ephemeral });
     const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
     const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Meet the creators of Atelier de Emi")
       .setDescription(lines.join("\n\n"))
-      .setFooter({ text: "Page " + page + " of " + totalPages + " • " + sorted.length + " shared profiles • use /creators page:" + (page + 1) + " for more ♡" });
+      .setFooter({ text: "Page " + page + " of " + totalPages + " • " + sorted.length + " shared profiles • use /creators page:N to browse ♡" });
     return interaction.reply({ embeds: [embed] });
   }
 
