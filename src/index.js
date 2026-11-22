@@ -3,7 +3,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const {
   Client, GatewayIntentBits, PermissionFlagsBits, ChannelType,
-  EmbedBuilder, REST, Routes, SlashCommandBuilder
+  EmbedBuilder, REST, Routes, SlashCommandBuilder,
+  ActionRowBuilder, ButtonBuilder, ButtonStyle
 } = require("discord.js");
 
 const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
@@ -48,29 +49,77 @@ const rulesEmbed = () => new EmbedBuilder()
 
 
 const rolePlan = [
-  { name: "👑・Owner", color: 0xE8A2C8 },
-  { name: "🌸・Administrator", color: 0xE6A0B4 },
-  { name: "🛡️・Moderator", color: 0xB69AD8 },
-  { name: "🎀・Cosplayer", color: 0xF4B8CF },
-  { name: "🎨・Artist", color: 0xE8B7D2 },
-  { name: "📸・Photographer", color: 0xB8C6E8 },
-  { name: "🧵・Crafter", color: 0xD9B8A7 },
+  // Staff roles are never self-assignable. Assign these manually to trusted people.
+  { name: "👑・Owner", color: 0xE8A2C8, permissions: [PermissionFlagsBits.Administrator] },
+  { name: "🌸・Administrator", color: 0xE6A0B4, permissions: [
+    PermissionFlagsBits.ManageGuild, PermissionFlagsBits.ManageChannels,
+    PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ManageMessages,
+    PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.ViewAuditLog
+  ] },
+  { name: "🛡️・Moderator", color: 0xB69AD8, permissions: [
+    PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ModerateMembers,
+    PermissionFlagsBits.ViewAuditLog
+  ] },
+  { name: "🎀・Cosplayer", color: 0xF4B8CF, selfAssignable: true },
+  { name: "🎨・Artist", color: 0xE8B7D2, selfAssignable: true },
+  { name: "📸・Photographer", color: 0xB8C6E8, selfAssignable: true },
+  { name: "🧵・Crafter", color: 0xD9B8A7, selfAssignable: true },
   { name: "✨・Community", color: 0xE9D6A5 },
   { name: "🌱・New Arrival", color: 0xA9D8C8 },
-  { name: "📢・Announcement Pings", color: 0xF1C7A8, mentionable: true },
-  { name: "🎉・Event Pings", color: 0xC8B6E8, mentionable: true }
+  { name: "📢・Announcement Pings", color: 0xF1C7A8, mentionable: true, selfAssignable: true },
+  { name: "🎉・Event Pings", color: 0xC8B6E8, mentionable: true, selfAssignable: true }
+];
+
+const selfRoleButtons = [
+  { id: "selfrole_cosplayer", label: "Cosplayer", emoji: "🎀", role: "🎀・Cosplayer" },
+  { id: "selfrole_artist", label: "Artist", emoji: "🎨", role: "🎨・Artist" },
+  { id: "selfrole_photographer", label: "Photographer", emoji: "📸", role: "📸・Photographer" },
+  { id: "selfrole_crafter", label: "Crafter", emoji: "🧵", role: "🧵・Crafter" },
+  { id: "selfrole_announcements", label: "Announcement pings", emoji: "📢", role: "📢・Announcement Pings" },
+  { id: "selfrole_events", label: "Event pings", emoji: "🎉", role: "🎉・Event Pings" }
 ];
 
 async function ensureRole(guild, info) {
-  const existing = guild.roles.cache.find((role) => role.name === info.name);
-  if (existing) return existing;
-  return guild.roles.create({
+  let role = guild.roles.cache.find((item) => item.name === info.name);
+  const options = {
     name: info.name,
     color: info.color,
+    permissions: info.permissions || [],
     mentionable: Boolean(info.mentionable),
     reason: "Shrine Assistant server setup"
-  });
+  };
+  if (role) {
+    await role.edit(options);
+    return role;
+  }
+  role = await guild.roles.create(options);
+  return role;
 }
+
+function buildSelfRoleRows() {
+  const buttons = selfRoleButtons.map((item) =>
+    new ButtonBuilder()
+      .setCustomId(item.id)
+      .setLabel(item.label)
+      .setEmoji(item.emoji)
+      .setStyle(ButtonStyle.Secondary)
+  );
+  return [
+    new ActionRowBuilder().addComponents(buttons.slice(0, 4)),
+    new ActionRowBuilder().addComponents(buttons.slice(4, 6))
+  ];
+}
+
+const selfRoleEmbed = () => new EmbedBuilder()
+  .setColor(pink)
+  .setTitle("୨୧ Choose your shrine roles")
+  .setDescription(
+    "Pick the roles that suit you! Tap a button again to remove that role.\n\n" +
+    "**Community interests**\n🎀 Cosplayer • 🎨 Artist • 📸 Photographer • 🧵 Crafter\n\n" +
+    "**Optional notifications**\n📢 Announcement pings • 🎉 Event pings\n\n" +
+    "These roles are optional. Staff roles are assigned by the server team only."
+  )
+  .setFooter({ text: "Emi Atelier • choose what fits you ♡" });
 
 const channelPlan = [
   { name: "🌸・welcome", topic: "A warm welcome to the shrine." },
@@ -78,6 +127,7 @@ const channelPlan = [
   { name: "📢・announcements", topic: "Official Emi Atelier announcements." },
   { name: "💬・general", topic: "Chat, meet people, and make yourself at home." },
   { name: "🎀・introductions", topic: "Tell the community a little about yourself." },
+  { name: "🎭・choose-roles", topic: "Choose your own community and notification roles." },
   { name: "🤖・bot-commands", topic: "A home for bot commands." }
 ];
 
@@ -94,6 +144,19 @@ async function ensureChannel(guild, category, info) {
     await channel.setParent(category.id);
   }
   return channel;
+}
+
+async function ensureRolePanel(channel) {
+  const messages = await channel.messages.fetch({ limit: 30 }).catch(() => null);
+  const existing = messages && messages.find((message) =>
+    message.author.id === client.user.id &&
+    message.embeds.some((item) => item.title === "୨୧ Choose your shrine roles")
+  );
+  if (existing) {
+    await existing.edit({ embeds: [selfRoleEmbed()], components: buildSelfRoleRows() });
+  } else {
+    await channel.send({ embeds: [selfRoleEmbed()], components: buildSelfRoleRows() });
+  }
 }
 
 async function ensureEmbed(channel, title, embed) {
@@ -128,11 +191,13 @@ async function setupShrine(guild) {
   }
   await ensureEmbed(channels["🌸・welcome"], "୨୧ Welcome to the shrine!", welcomeEmbed(guild));
   await ensureEmbed(channels["📜・rules"], "୨୧ Shrine guidelines", rulesEmbed());
+  await ensureRolePanel(channels["🎭・choose-roles"]);
 
   const config = readConfig();
   config[guild.id] = {
     categoryId: category.id,
-    welcomeChannelId: channels["🌸・welcome"].id
+    welcomeChannelId: channels["🌸・welcome"].id,
+    roleChannelId: channels["🎭・choose-roles"].id
   };
   writeConfig(config);
 }
@@ -156,6 +221,29 @@ client.once("ready", async () => {
 });
 
 client.on("interactionCreate", async (interaction) => {
+  if (interaction.isButton() && interaction.customId.startsWith("selfrole_")) {
+    const choice = selfRoleButtons.find((item) => item.id === interaction.customId);
+    if (!choice || !interaction.inGuild()) return;
+    const role = interaction.guild.roles.cache.find((item) => item.name === choice.role);
+    if (!role) {
+      return interaction.reply({ content: "That role isn't available yet. Please ask a moderator to run /setup.", ephemeral: true });
+    }
+    if (!role.editable) {
+      return interaction.reply({ content: "I can't manage that role yet. Please ask an admin to move my bot role above the self-assignable roles.", ephemeral: true });
+    }
+    const member = await interaction.guild.members.fetch(interaction.user.id);
+    const hasRole = member.roles.cache.has(role.id);
+    await interaction.deferReply({ ephemeral: true });
+    if (hasRole) {
+      await member.roles.remove(role, "Member used the self-role panel");
+      await interaction.editReply("୨୧ Removed **" + role.name + "** from your roles.");
+    } else {
+      await member.roles.add(role, "Member used the self-role panel");
+      await interaction.editReply("୨୧ Added **" + role.name + "** to your roles!");
+    }
+    return;
+  }
+
   if (!interaction.isChatInputCommand() || interaction.commandName !== "setup") return;
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
     return interaction.reply({
@@ -176,6 +264,10 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("guildMemberAdd", async (member) => {
+  const communityRole = member.guild.roles.cache.find((role) => role.name === "✨・Community");
+  if (communityRole && communityRole.editable) {
+    await member.roles.add(communityRole, "Automatic community member role on joining").catch(console.error);
+  }
   const channelId = readConfig()[member.guild.id]?.welcomeChannelId;
   if (!channelId) return;
   const channel = await member.guild.channels.fetch(channelId).catch(() => null);
