@@ -321,6 +321,28 @@ async function ensureEmbed(channel, title, embed) {
   else await channel.send({ embeds: [embed] });
 }
 
+async function ensureStartHereLinks(channel, guild, channels) {
+  const messages = await channel.messages.fetch({ limit: 30 }).catch(() => null);
+  const existing = messages && messages.find(message =>
+    message.author.id === client.user.id &&
+    message.embeds.some(embed => embed.title === "୨୧ Your first steps at the shrine")
+  );
+  if (!existing) return;
+  const links = [
+    { label: "Read the rules", channel: channels["📜・rules"] },
+    { label: "Choose roles", channel: channels["🎭・choose-roles"] },
+    { label: "Say hello", channel: channels["🎀・introductions"] },
+    { label: "Explore the gallery", channel: channels["🎀・cosplay-showcase"] }
+  ].filter(item => item.channel);
+  const row = new ActionRowBuilder().addComponents(links.map(item =>
+    new ButtonBuilder()
+      .setLabel(item.label)
+      .setStyle(ButtonStyle.Link)
+      .setURL("https://discord.com/channels/" + guild.id + "/" + item.channel.id)
+  ));
+  await existing.edit({ components: [row] });
+}
+
 async function setupShrine(guild) {
   await guild.channels.fetch();
   await guild.roles.fetch();
@@ -438,6 +460,7 @@ async function setupShrine(guild) {
   }
 
   await ensureEmbed(channels["🌱・start-here"], "୨୧ Your first steps at the shrine", startHereEmbed());
+  await ensureStartHereLinks(channels["🌱・start-here"], guild, channels);
   await ensureEmbed(channels["🌸・welcome"], "୨୧ Welcome to the shrine!", welcomeEmbed(guild));
   await ensureEmbed(channels["🎀・introductions"], "୨୧ A little introduction", introductionEmbed());
   await ensureEmbed(channels["📜・rules"], "୨୧ Shrine guidelines", rulesEmbed());
