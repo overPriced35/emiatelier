@@ -89,6 +89,6 @@ The bot's own role does not automatically make a person staff. Staff roles are a
 
 ## Available slash commands
 
-`/setup`, `/help`, `/serverinfo`, `/userinfo`, `/suggest`, `/report`, `/bug-report`, `/feedback`, `/icebreaker`, `/event-create`, `/events`, `/event-cancel`, `/prompt`, `/emi-update`, `/project-update`, `/feedback-request`, `/kudos`, `/profile-set`, `/profile-view`, `/profile-clear`, `/creators`, `/spotlight`, `/warn`, `/warnings`, `/clearwarnings`, `/timeout`, `/untimeout`, `/kick`, `/ban`, `/clear`, `/lock`, `/unlock`, `/slowmode`, and `/staffhelp`.
+`/setup`, `/help`, `/serverinfo`, `/ping`, `/userinfo`, `/suggest`, `/report`, `/bug-report`, `/feedback`, `/icebreaker`, `/event-create`, `/events`, `/event-cancel`, `/prompt`, `/emi-update`, `/project-update`, `/feedback-request`, `/kudos`, `/profile-set`, `/profile-view`, `/profile-clear`, `/creators`, `/spotlight`, `/warn`, `/warnings`, `/clearwarnings`, `/timeout`, `/untimeout`, `/kick`, `/ban`, `/clear`, `/lock`, `/unlock`, `/slowmode`, and `/staffhelp`.
 
 Some commands are restricted by Discord permissions or server ownership. Use `/help` for member-facing guidance and `/staffhelp` for the internal staff guide.
