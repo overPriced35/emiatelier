@@ -166,7 +166,7 @@ const channelPlan = [
   { name: "🌱・start-here", topic: "New to the shrine? Start here for the welcome guide, rules, roles, and where to go next." },
   { name: "🌸・welcome", topic: "A warm welcome to the shrine." },
   { name: "📜・rules", topic: "Please read our community guidelines." },
-  { name: "📢・announcements", topic: "Official Atelier de Emi announcements." },
+  { name: "📢・announcements", topic: "Official Atelier de Emi announcements. Follow this channel to receive community news in your own server.", type: ChannelType.GuildAnnouncement },
   { name: "💬・general", topic: "Chat, meet people, and make yourself at home." },
   { name: "🎀・introductions", topic: "Tell the community a little about yourself." },
   { name: "🎭・choose-roles", topic: "Choose your own community and notification roles." },
@@ -194,14 +194,34 @@ async function ensureCategory(guild, name, permissionOverwrites) {
 }
 
 async function ensureChannel(guild, category, info, permissionOverwrites) {
+  const desiredType = info.type || ChannelType.GuildText;
   let channel = guild.channels.cache.find(
-    (item) => item.type === ChannelType.GuildText && item.name === info.name
+    (item) => item.type === desiredType && item.name === info.name
   );
+  if (!channel && desiredType === ChannelType.GuildAnnouncement) {
+    const legacyTextChannel = guild.channels.cache.find(
+      (item) => item.type === ChannelType.GuildText && item.name === info.name
+    );
+    if (legacyTextChannel) {
+      const archiveName = "📢・announcements-archive";
+      const archiveExists = guild.channels.cache.find(
+        (item) => item.type === ChannelType.GuildText && item.name === archiveName
+      );
+      if (archiveExists) {
+        throw new Error("The old announcements channel is still a regular text channel and 📢・announcements-archive already exists. Rename or move the archive channel, then run /setup → Update again. No messages were deleted.");
+      }
+      await legacyTextChannel.edit({
+        name: archiveName,
+        topic: "Archived messages from the former announcements channel. New announcements are posted in 📢・announcements."
+      }, { reason: "Preserve existing messages while creating the native announcement channel" });
+    }
+  }
   if (!channel) {
     channel = await guild.channels.create({
-      name: info.name, type: ChannelType.GuildText,
+      name: info.name, type: desiredType,
       parent: category.id, topic: info.topic,
-      permissionOverwrites: permissionOverwrites || []
+      permissionOverwrites: permissionOverwrites || [],
+      reason: "Shrine Assistant server setup"
     });
   } else {
     if (channel.parentId !== category.id) await channel.setParent(category.id);
@@ -504,6 +524,17 @@ async function setupShrine(guild) {
   await ensureEmbed(channels["📖・staff-command-guide"], "୨୧ Shrine Assistant — staff command guide", staffGuideEmbed());
   await ensureRolePanel(channels["🎭・choose-roles"]);
   await ensureTicketPanel(channels["🆘・contact-staff"]);
+
+  // Set Discord's native Community channel assignments and server description.
+  const guujiOffice = channels["🔒・guuji-office"];
+  await guild.edit({
+    description: "A creative community for cosplay, art, photography, crafting and more, inspired by Emi Atelier and the Grand Narukami Shrine.",
+    rulesChannel: channels["📜・rules"],
+    publicUpdatesChannel: guujiOffice,
+    safetyAlertsChannel: guujiOffice,
+    systemChannel: channels["🌸・welcome"],
+    reason: "Configure Atelier de Emi Community settings"
+  });
 
   const config = readConfig();
   config[guild.id] = {
