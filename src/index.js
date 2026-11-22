@@ -46,6 +46,32 @@ const rulesEmbed = () => new EmbedBuilder()
   )
   .setFooter({ text: "Emi Atelier • thank you for being here ♡" });
 
+
+const rolePlan = [
+  { name: "👑・Owner", color: 0xE8A2C8 },
+  { name: "🌸・Administrator", color: 0xE6A0B4 },
+  { name: "🛡️・Moderator", color: 0xB69AD8 },
+  { name: "🎀・Cosplayer", color: 0xF4B8CF },
+  { name: "🎨・Artist", color: 0xE8B7D2 },
+  { name: "📸・Photographer", color: 0xB8C6E8 },
+  { name: "🧵・Crafter", color: 0xD9B8A7 },
+  { name: "✨・Community", color: 0xE9D6A5 },
+  { name: "🌱・New Arrival", color: 0xA9D8C8 },
+  { name: "📢・Announcement Pings", color: 0xF1C7A8, mentionable: true },
+  { name: "🎉・Event Pings", color: 0xC8B6E8, mentionable: true }
+];
+
+async function ensureRole(guild, info) {
+  const existing = guild.roles.cache.find((role) => role.name === info.name);
+  if (existing) return existing;
+  return guild.roles.create({
+    name: info.name,
+    color: info.color,
+    mentionable: Boolean(info.mentionable),
+    reason: "Shrine Assistant server setup"
+  });
+}
+
 const channelPlan = [
   { name: "🌸・welcome", topic: "A warm welcome to the shrine." },
   { name: "📜・rules", topic: "Please read our community guidelines." },
@@ -89,6 +115,11 @@ async function setupShrine(guild) {
     category = await guild.channels.create({
       name: "⛩️・THE SHRINE", type: ChannelType.GuildCategory
     });
+  }
+
+  await guild.roles.fetch();
+  for (const info of rolePlan) {
+    await ensureRole(guild, info);
   }
 
   const channels = {};
@@ -135,11 +166,11 @@ client.on("interactionCreate", async (interaction) => {
   await interaction.deferReply({ ephemeral: true });
   try {
     await setupShrine(interaction.guild);
-    await interaction.editReply("୨୧ Your shrine is ready! Channels and embeds are in place.");
+    await interaction.editReply("୨୧ Your shrine is ready! Channels, roles, and embeds are in place.");
   } catch (error) {
     console.error("Setup failed:", error);
     await interaction.editReply(
-      "Setup failed. Check that I have Manage Channels, View Channels, Send Messages, Embed Links, and Read Message History permissions."
+      "Setup failed. Check that I have Manage Roles, Manage Channels, View Channels, Send Messages, Embed Links, and Read Message History permissions. Also make sure my bot role is above the roles it needs to create."
     );
   }
 });
