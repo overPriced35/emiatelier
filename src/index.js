@@ -58,7 +58,7 @@ const startHereEmbed = () => new EmbedBuilder()
     "**04 — Explore and join in**\nBrowse the gallery and 🎐・creative-prompts, chat in 💬・general, and use 💬・gallery-chat to talk about creative posts.\n\n" +
     "**05 — Make a creator profile**\nUse /profile-set to introduce your creative interests and work. Browse shared profiles with /creators, or view one with /profile-view. This is optional, and you can remove your profile at any time with /profile-clear.\n\n" +
     "**06 — Follow Emi's creative journey**\nVisit 📓・emi-updates for Emi Atelier project news and personal creative progress.\n\n" +
-    "**07 — Share an idea or need help?**\nUse /suggest to share an idea, or /report to contact staff privately. You can also ask a shrine staff member for help. Never share passwords or sensitive personal information.\n\n**A little note**\nAtelier de Emi is Emi's creative space, with a look and atmosphere inspired by Yae Miko and the Grand Narukami Shrine. Emi's projects and creative journey are part of its identity, while every member is encouraged to share their own work and interests. You do not need to know Genshin Impact to belong here."
+    "**07 — Share an idea or need help?**\nUse /suggest to share a community idea, or /report to contact staff privately. You can also ask a shrine staff member for help. Never share passwords or sensitive personal information.\n\n**🧪 Helping test the shrine?**\nUse /bug-report to report something broken, or /feedback to tell us what feels great and what could be improved. These submissions go privately to the staff team.\n\n**A little note**\nAtelier de Emi is Emi's creative space, with a look and atmosphere inspired by Yae Miko and the Grand Narukami Shrine. Emi's projects and creative journey are part of its identity, while every member is encouraged to share their own work and interests. You do not need to know Genshin Impact to belong here."
   )
   .setFooter({ text: "Atelier de Emi • make yourself at home ♡" });
 
@@ -70,10 +70,12 @@ const staffGuideEmbed = () => new EmbedBuilder()
     { name: "Warnings", value: "`/warn member reason` — record a warning\n`/warnings member` — view warning history\n`/clearwarnings member` — clear recorded warnings", inline: false },
     { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\n`/untimeout member reason` — remove a timeout\n`/kick member reason` — remove a member\n`/ban member reason` — ban a member", inline: false },
     { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\n`/lock reason` and `/unlock` — lock or restore the current channel\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
-    { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event", inline: false },\n    { name: "Tester support", value: "`/bug-report` — privately report a bot or server issue\n`/feedback` — privately share tester feedback or an idea", inline: false },
+    { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event", inline: false },
+    { name: "Tester support", value: "`/bug-report` — privately report a bot or server issue\n`/feedback` — privately share tester feedback or an idea", inline: false },
     { name: "Information", value: "`/userinfo member` — view basic member information\n`/staffhelp` — show this guide", inline: false },
     { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
-    { name: "Tester support", value: "Review submissions in 🧪・tester-feedback. Thank testers, reproduce issues where possible, record what happened and what changed, and keep private reports within staff.", inline: false },\n    { name: "Staff expectations", value: "Keep reasons professional, do not share staff-only information, and escalate uncertain or serious cases to the Guuji. Never use moderation tools to settle personal disagreements.", inline: false }
+    { name: "Tester support", value: "Review submissions in 🧪・tester-feedback. Thank testers, reproduce issues where possible, record what happened and what changed, and keep private reports within staff.", inline: false },
+    { name: "Staff expectations", value: "Keep reasons professional, do not share staff-only information, and escalate uncertain or serious cases to the Guuji. Never use moderation tools to settle personal disagreements.", inline: false }
   )
   .setFooter({ text: "Atelier de Emi • internal staff reference" });
 
@@ -479,7 +481,19 @@ const moderationCommands = [
     .addStringOption(o => o.setName("idea").setDescription("Your suggestion for the community").setMaxLength(1000).setRequired(true)),
   new SlashCommandBuilder().setName("report").setDescription("Privately contact shrine staff about a concern.")
     .addStringOption(o => o.setName("details").setDescription("Tell staff what happened").setMaxLength(1500).setRequired(true)),
-  new SlashCommandBuilder().setName("bug-report").setDescription("Privately report a Shrine Assistant or server issue.")\n    .addStringOption(o => o.setName("area").setDescription("Where did it happen? e.g. /setup, roles, welcome").setMaxLength(100).setRequired(true))\n    .addStringOption(o => o.setName("details").setDescription("What happened, and what did you expect?").setMaxLength(1500).setRequired(true))\n    .addStringOption(o => o.setName("steps").setDescription("Optional steps to reproduce the issue").setMaxLength(1000).setRequired(false))\n    .addStringOption(o => o.setName("severity").setDescription("How much does this affect testing?").addChoices({ name: "Low — minor issue", value: "Low" }, { name: "Normal — feature partly affected", value: "Normal" }, { name: "High — blocks testing", value: "High" }).setRequired(true)),\n  new SlashCommandBuilder().setName("feedback").setDescription("Privately share feedback about the server or bot.")\n    .addStringOption(o => o.setName("topic").setDescription("What is your feedback about?").setMaxLength(100).setRequired(true))\n    .addStringOption(o => o.setName("details").setDescription("What works well, or what could be better?").setMaxLength(1500).setRequired(true)),\n  new SlashCommandBuilder().setName("event-create").setDescription("Create a community event (staff only).")
+  new SlashCommandBuilder().setName("bug-report").setDescription("Privately report a Shrine Assistant or server issue.")
+    .addStringOption(o => o.setName("area").setDescription("Where did it happen? e.g. /setup, roles, welcome").setMaxLength(100).setRequired(true))
+    .addStringOption(o => o.setName("details").setDescription("What happened, and what did you expect?").setMaxLength(1500).setRequired(true))
+    .addStringOption(o => o.setName("steps").setDescription("Optional steps to reproduce the issue").setMaxLength(1000).setRequired(false))
+    .addStringOption(o => o.setName("severity").setDescription("How much does this affect testing?").addChoices(
+      { name: "Low — minor issue", value: "Low" },
+      { name: "Normal — feature partly affected", value: "Normal" },
+      { name: "High — blocks testing", value: "High" }
+    ).setRequired(true)),
+  new SlashCommandBuilder().setName("feedback").setDescription("Privately share feedback about the server or bot.")
+    .addStringOption(o => o.setName("topic").setDescription("What is your feedback about?").setMaxLength(100).setRequired(true))
+    .addStringOption(o => o.setName("details").setDescription("What works well, or what could be better?").setMaxLength(1500).setRequired(true)),
+  new SlashCommandBuilder().setName("event-create").setDescription("Create a community event (staff only).")
     .addStringOption(o => o.setName("title").setDescription("Name of the event").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("start").setDescription("Start date and time in ISO 8601 format, e.g. 2026-12-01T18:00:00+01:00").setRequired(true))
     .addIntegerOption(o => o.setName("duration").setDescription("Duration in minutes (15–1440)").setMinValue(15).setMaxValue(1440).setRequired(true))
@@ -838,7 +852,46 @@ async function handleModerationCommand(interaction) {
     return interaction.reply({ content: "Thank you! Your idea has been shared in 💡・suggestions. Members can react with 👍 or 👎 to give feedback.", flags: MessageFlags.Ephemeral });
   }
 
-  if (command === "bug-report" || command === "feedback") {\n    const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "🧪・tester-feedback");\n    if (!channel) return interaction.reply({ content: "The private tester-feedback channel is not set up yet. Please ask an admin to run /setup.", flags: MessageFlags.Ephemeral });\n    let embed;\n    if (command === "bug-report") {\n      const area = interaction.options.getString("area", true);\n      const details = interaction.options.getString("details", true);\n      const steps = interaction.options.getString("steps");\n      const severity = interaction.options.getString("severity", true);\n      embed = new EmbedBuilder().setColor(severity === "High" ? 0xD98B8B : severity === "Normal" ? 0xE9D6A5 : purple).setTitle("୨୧ Tester bug report").setDescription(details)\n        .addFields({ name: "Area", value: area, inline: true }, { name: "Severity", value: severity, inline: true }, { name: "Submitted by", value: interaction.user.tag + " (" + interaction.user.id + ")" }).setTimestamp();\n      if (steps) embed.addFields({ name: "Steps to reproduce", value: steps });\n    } else {\n      const topic = interaction.options.getString("topic", true);\n      const details = interaction.options.getString("details", true);\n      embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Tester feedback: " + topic).setDescription(details).addFields({ name: "Submitted by", value: interaction.user.tag + " (" + interaction.user.id + ")" }).setTimestamp();\n    }\n    await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });\n    return interaction.reply({ content: command === "bug-report" ? "Thank you! Your bug report has been sent privately to the shrine team." : "Thank you! Your feedback has been sent privately to the shrine team.", flags: MessageFlags.Ephemeral });\n  }\n\n  if (command === "report") {
+  if (command === "bug-report" || command === "feedback") {
+    const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "🧪・tester-feedback");
+    if (!channel) return interaction.reply({ content: "The private tester-feedback channel is not set up yet. Please ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
+    let embed;
+    if (command === "bug-report") {
+      const area = interaction.options.getString("area", true);
+      const details = interaction.options.getString("details", true);
+      const steps = interaction.options.getString("steps");
+      const severity = interaction.options.getString("severity", true);
+      embed = new EmbedBuilder()
+        .setColor(severity === "High" ? 0xD98B8B : severity === "Normal" ? 0xE9D6A5 : purple)
+        .setTitle("୨୧ Tester bug report")
+        .setDescription(details)
+        .addFields(
+          { name: "Area", value: area, inline: true },
+          { name: "Severity", value: severity, inline: true },
+          { name: "Submitted by", value: interaction.user.tag + " (" + interaction.user.id + ")" }
+        )
+        .setTimestamp();
+      if (steps) embed.addFields({ name: "Steps to reproduce", value: steps });
+    } else {
+      const topic = interaction.options.getString("topic", true);
+      const details = interaction.options.getString("details", true);
+      embed = new EmbedBuilder()
+        .setColor(pink)
+        .setTitle("୨୧ Tester feedback: " + topic)
+        .setDescription(details)
+        .addFields({ name: "Submitted by", value: interaction.user.tag + " (" + interaction.user.id + ")" })
+        .setTimestamp();
+    }
+    await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
+    return interaction.reply({
+      content: command === "bug-report"
+        ? "Thank you! Your bug report has been sent privately to the shrine team."
+        : "Thank you! Your feedback has been sent privately to the shrine team.",
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  if (command === "report") {
     const details = interaction.options.getString("details", true);
     const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "📨・member-reports");
     if (!channel) return interaction.reply({ content: "The private report channel is not set up yet. Please contact a shrine staff member directly.", flags: MessageFlags.Ephemeral });
