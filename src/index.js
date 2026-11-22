@@ -1190,7 +1190,7 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isButton() && interaction.customId === "ticket_close") {
     if (!interaction.inGuild() || !interaction.channel) return;
     const topic = interaction.channel.topic || "";
-    const ownerMatch = topic.match(/Ticket owner: (\\d+)/);
+    const ownerMatch = topic.match(/Ticket owner: (\d+)/);
     if (!ownerMatch) return interaction.reply({ content: "I couldn't verify who opened this ticket. Please contact staff.", flags: MessageFlags.Ephemeral });
     const ownerId = ownerMatch[1];
     const staffNames = ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"];
@@ -1246,6 +1246,7 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isStringSelectMenu() && interaction.customId === "ticket_create") {
     if (!interaction.inGuild()) return interaction.reply({ content: "Tickets can only be opened inside the server.", flags: MessageFlags.Ephemeral });
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    try {
     const guild = interaction.guild;
     const existing = guild.channels.cache.find(channel =>
       channel.type === ChannelType.GuildText &&
@@ -1285,6 +1286,10 @@ client.on("interactionCreate", async (interaction) => {
     );
     await channel.send({ content: interaction.user.toString() + " • " + staffNames.map(name => guild.roles.cache.find(role => role.name === name)).filter(Boolean).map(role => role.toString()).join(" "), embeds: [embed], components: [row], allowedMentions: { users: [interaction.user.id], roles: [] } });
     return interaction.editReply("୨୧ Your private support conversation is ready: " + channel.toString());
+    } catch (error) {
+      console.error("Could not create support ticket:", error);
+      return interaction.editReply("I could not open your support conversation just now. Please try again or contact a shrine staff member.").catch(() => {});
+    }
   }
 
   if (interaction.isChatInputCommand() && interaction.commandName !== "setup") {
