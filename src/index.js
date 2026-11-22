@@ -203,6 +203,24 @@ function galleryPermissions(guild, postingRole, staffRoles) {
   return overwrites;
 }
 
+function standardChannelPermissions(guild, mode) {
+  const everyone = {
+    id: guild.roles.everyone.id,
+    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+    deny: []
+  };
+  if (mode === "readOnly") {
+    everyone.allow.push(PermissionFlagsBits.AddReactions);
+    everyone.deny.push(PermissionFlagsBits.SendMessages, PermissionFlagsBits.CreatePublicThreads, PermissionFlagsBits.CreatePrivateThreads);
+  } else {
+    everyone.allow.push(PermissionFlagsBits.SendMessages, PermissionFlagsBits.AddReactions, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.CreatePublicThreads);
+  }
+  return [everyone, {
+    id: client.user.id,
+    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.ManageMessages]
+  }];
+}
+
 function staffChannelPermissions(guild, allowedRoleNames) {
   const overwrites = [{
     id: guild.roles.everyone.id,
@@ -262,7 +280,8 @@ async function setupShrine(guild) {
 
   const channels = {};
   for (const info of channelPlan) {
-    channels[info.name] = await ensureChannel(guild, mainCategory, info);
+    const readOnly = ["🌸・welcome", "📜・rules", "📢・announcements", "🎭・choose-roles"].includes(info.name);
+    channels[info.name] = await ensureChannel(guild, mainCategory, info, standardChannelPermissions(guild, readOnly ? "readOnly" : "chat"));
   }
 
   const staffNames = ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"];
@@ -301,7 +320,7 @@ async function setupShrine(guild) {
   channels["💬・gallery-chat"] = await ensureChannel(guild, galleryCategory, {
     name: "💬・gallery-chat",
     topic: "Chat about gallery posts, share ideas, and give creators encouragement."
-  });
+  }, standardChannelPermissions(guild, "chat"));
 
   channels[moderationLogName] = await ensureChannel(guild, staffCategory, {
     name: moderationLogName,
@@ -406,7 +425,16 @@ async function handleModerationCommand(interaction) {
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
+  if (command === "warn" || command === "warnings") {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.ModerateMembers)) {
+      return interaction.reply({ content: "You need Moderate Members permission to use this command.", flags: MessageFlags.Ephemeral });
+    }
+  }
+
   if (command === "warn") {
+    if (memberUser.id === interaction.user.id || memberUser.id === client.user.id || memberUser.id === interaction.guild.ownerId) {
+      return interaction.reply({ content: "You cannot issue a warning to that account.", flags: MessageFlags.Ephemeral });
+    }
     const list = getWarnings(config, interaction.guild.id, memberUser.id);
     const entry = { reason, moderatorId: interaction.user.id, at: new Date().toISOString() };
     list.push(entry);
