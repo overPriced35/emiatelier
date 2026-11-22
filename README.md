@@ -85,7 +85,8 @@ The bot's own role does not automatically make a person staff. Staff roles are a
 ## Operational notes
 
 - Slash commands are registered for the configured `GUILD_ID` when the bot starts.
-- Re-run `/setup` → **Update** after deploying changes to refresh planned channels, permissions and bot panels. Existing channel messages are generally preserved.
+- After deploying onboarding changes, run `/setup` → **Update** to refresh the start-here guide, then run `/onboarding-setup` once to publish the native Discord onboarding flow.
+- Re-run `/setup` → **Update** after other server-layout changes to refresh planned channels, permissions and bot panels. Existing channel messages are generally preserved.
 - Update also retires the old tester-only channels and role from earlier versions; there is no active tester programme.
 - Do not use **Fresh reset** as a routine update. It permanently removes channels, messages, forum posts and most roles.
 
