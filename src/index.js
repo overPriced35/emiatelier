@@ -1331,6 +1331,7 @@ client.on("interactionCreate", async (interaction) => {
     if (!category) return interaction.editReply("The staff area is not set up yet. Please ask an administrator to run /setup.");
     const kind = interaction.values[0];
     const staffNames = ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"];
+    const staffRoles = staffNames.map(name => guild.roles.cache.find(role => role.name === name)).filter(Boolean);
     const overwrites = [
       { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
       { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks] },
@@ -1356,7 +1357,12 @@ client.on("interactionCreate", async (interaction) => {
       new ButtonBuilder().setCustomId("ticket_claim").setLabel("Claim conversation").setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId("ticket_close").setLabel("Close conversation").setStyle(ButtonStyle.Secondary)
     );
-    await channel.send({ content: interaction.user.toString() + " • " + staffNames.map(name => guild.roles.cache.find(role => role.name === name)).filter(Boolean).map(role => role.toString()).join(" "), embeds: [embed], components: [row], allowedMentions: { users: [interaction.user.id], roles: [] } });
+    await channel.send({
+      content: interaction.user.toString() + " • " + staffRoles.map(role => role.toString()).join(" "),
+      embeds: [embed],
+      components: [row],
+      allowedMentions: { users: [interaction.user.id], roles: staffRoles.map(role => role.id) }
+    });
     await sendModerationLog(guild, "୨୧ Support conversation opened", "**Channel:** " + channel.toString() + "\n**Opened by:** " + interaction.user.toString() + "\n**Category:** " + kind);
     return interaction.editReply("୨୧ Your private support conversation is ready: " + channel.toString());
     } catch (error) {
