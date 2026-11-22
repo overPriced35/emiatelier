@@ -410,7 +410,8 @@ async function setupShrine(guild) {
 
   const staffChannels = [
     { name: "📖・staff-command-guide", topic: "Private reference for Shrine Assistant staff commands and moderation expectations.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden", "🪷・Miko Apprentice"] },
-    { name: "📨・member-reports", topic: "Private reports and support requests submitted to Shrine Assistant.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },\n    { name: "🧪・tester-feedback", topic: "Private tester bug reports and feedback for Shrine Assistant and Atelier de Emi.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
+    { name: "📨・member-reports", topic: "Private reports and support requests submitted to Shrine Assistant.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
+    { name: "🧪・tester-feedback", topic: "Private tester bug reports and feedback for Shrine Assistant and Atelier de Emi.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
     { name: "🔒・guuji-office", topic: "Private office for the Guuji.", roles: ["⛩️・Guuji"] },
     { name: "🌸・senior-shrine-maiden", topic: "Private coordination for senior shrine staff.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden"] },
     { name: "🦊・shrine-maiden-office", topic: "Staff coordination for shrine maidens.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"] },
