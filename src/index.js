@@ -1216,6 +1216,7 @@ client.on("interactionCreate", async (interaction) => {
         .setTimestamp()],
       allowedMentions: { parse: [] }
     });
+    await sendModerationLog(interaction.guild, "୨୧ Support conversation closed", "**Channel:** " + interaction.channel.toString() + "\n**Closed by:** " + interaction.user.toString() + "\n**Ticket owner:** <@" + ownerId + ">");
     await interaction.editReply("୨୧ Ticket closed. Thank you for reaching out!");
     return;
   }
@@ -1285,6 +1286,7 @@ client.on("interactionCreate", async (interaction) => {
       new ButtonBuilder().setCustomId("ticket_close").setLabel("Close conversation").setStyle(ButtonStyle.Secondary)
     );
     await channel.send({ content: interaction.user.toString() + " • " + staffNames.map(name => guild.roles.cache.find(role => role.name === name)).filter(Boolean).map(role => role.toString()).join(" "), embeds: [embed], components: [row], allowedMentions: { users: [interaction.user.id], roles: [] } });
+    await sendModerationLog(guild, "୨୧ Support conversation opened", "**Channel:** " + channel.toString() + "\n**Opened by:** " + interaction.user.toString() + "\n**Category:** " + kind);
     return interaction.editReply("୨୧ Your private support conversation is ready: " + channel.toString());
     } catch (error) {
       console.error("Could not create support ticket:", error);
