@@ -28,9 +28,9 @@ const purple = 0xC9B6E4;
 const welcomeEmbed = (guild) => new EmbedBuilder()
   .setColor(pink)
   .setTitle("୨୧ Welcome to the shrine!")
-  .setDescription("Welcome to Emi Atelier — a creative community inspired by Yae Miko and the Grand Narukami Shrine.\n\n♡ Meet fellow cosplayers and creators\n♡ Share cosplay, art, photography and crafts\n♡ Find inspiration, make friends and have fun\n\nNo Genshin knowledge required. Everyone is welcome!")
+  .setDescription("Welcome to Atelier de Emi — Emi's creative space for cosplay, art, photography, crafting and community.\n\nWith the elegance and playful spirit of the Grand Narukami Shrine as inspiration, this is a place to share projects, meet fellow creators and find inspiration.\n\nEmi's creative journey is at the heart of the atelier, and everyone is welcome to add their own creativity to it. No Genshin knowledge required!")
   .setThumbnail(guild.iconURL({ size: 256 }))
-  .setFooter({ text: "Emi Atelier • made with love" })
+  .setFooter({ text: "Atelier de Emi • made with love" })
   .setTimestamp();
 
 const rulesEmbed = () => new EmbedBuilder()
@@ -45,7 +45,7 @@ const rulesEmbed = () => new EmbedBuilder()
     "**06 — Listen to staff**\nFollow moderator guidance and ask if something is unclear.\n\n" +
     "Help us keep this community welcoming."
   )
-  .setFooter({ text: "Emi Atelier • thank you for being here ♡" });
+  .setFooter({ text: "Atelier de Emi • thank you for being here ♡" });
 
 
 const startHereEmbed = () => new EmbedBuilder()
@@ -56,9 +56,9 @@ const startHereEmbed = () => new EmbedBuilder()
     "**02 — Introduce yourself**\nSay hello in 🎀・introductions. Share only what you're comfortable sharing.\n\n" +
     "**03 — Choose your interests**\nVisit 🎭・choose-roles and select Cosplayer, Artist, Photographer, or Crafter. These roles unlock posting in their matching gallery spaces.\n\n" +
     "**04 — Explore and join in**\nBrowse the gallery, chat in 💬・general, and use 💬・gallery-chat to talk about creative posts.\n\n" +
-    "**05 — Share an idea or need help?**\nUse /suggest to share an idea, or /report to contact staff privately. You can also ask a shrine staff member for help. Never share passwords or sensitive personal information.\n\n**A little note**\nThis community is inspired by Yae Miko and the Grand Narukami Shrine, but you do not need to know Genshin Impact to belong here. Cosplay, creativity, friendship and fun come first."
+    "**05 — Share an idea or need help?**\nUse /suggest to share an idea, or /report to contact staff privately. You can also ask a shrine staff member for help. Never share passwords or sensitive personal information.\n\n**A little note**\nAtelier de Emi is Emi's creative space, with a look and atmosphere inspired by Yae Miko and the Grand Narukami Shrine. Emi's projects and creative journey are part of its identity, while every member is encouraged to share their own work and interests. You do not need to know Genshin Impact to belong here."
   )
-  .setFooter({ text: "Emi Atelier • make yourself at home ♡" });
+  .setFooter({ text: "Atelier de Emi • make yourself at home ♡" });
 
 const staffGuideEmbed = () => new EmbedBuilder()
   .setColor(purple)
@@ -72,7 +72,7 @@ const staffGuideEmbed = () => new EmbedBuilder()
     { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
     { name: "Staff expectations", value: "Keep reasons professional, do not share staff-only information, and escalate uncertain or serious cases to the Guuji. Never use moderation tools to settle personal disagreements.", inline: false }
   )
-  .setFooter({ text: "Emi Atelier • internal staff reference" });
+  .setFooter({ text: "Atelier de Emi • internal staff reference" });
 
 
 const rolePlan = [
@@ -144,19 +144,19 @@ const selfRoleEmbed = () => new EmbedBuilder()
     "**Optional notifications**\n📢 Announcement pings • 🎉 Event pings\n\n" +
     "These roles are optional. Staff roles are assigned by the server team only."
   )
-  .setFooter({ text: "Emi Atelier • choose what fits you ♡" });
+  .setFooter({ text: "Atelier de Emi • choose what fits you ♡" });
 
 const channelPlan = [
   { name: "🌱・start-here", topic: "New to the shrine? Start here for the welcome guide, rules, roles, and where to go next." },
   { name: "🌸・welcome", topic: "A warm welcome to the shrine." },
   { name: "📜・rules", topic: "Please read our community guidelines." },
-  { name: "📢・announcements", topic: "Official Emi Atelier announcements." },
+  { name: "📢・announcements", topic: "Official Atelier de Emi announcements." },
   { name: "💬・general", topic: "Chat, meet people, and make yourself at home." },
   { name: "🎀・introductions", topic: "Tell the community a little about yourself." },
   { name: "🎭・choose-roles", topic: "Choose your own community and notification roles." },
   { name: "🤖・bot-commands", topic: "A home for Shrine Assistant commands and helpful tools." },
   { name: "💡・suggestions", topic: "Community ideas submitted through /suggest." },
-  { name: "🌟・creator-spotlights", topic: "Community members and their creative work, celebrated by the Emi Atelier team." }
+  { name: "🌟・creator-spotlights", topic: "Community members and their creative work, celebrated by the Atelier de Emi team." }
 ];
 
 async function ensureCategory(guild, name, permissionOverwrites) {
@@ -451,8 +451,8 @@ const moderationCommands = [
     .addUserOption(o => o.setName("member").setDescription("Member to inspect").setRequired(false)),
   new SlashCommandBuilder().setName("staffhelp").setDescription("Show the Shrine Assistant staff command guide."),
   new SlashCommandBuilder().setName("help").setDescription("See what Shrine Assistant can help you with."),
-  new SlashCommandBuilder().setName("serverinfo").setDescription("Learn about the Emi Atelier community."),
-  new SlashCommandBuilder().setName("suggest").setDescription("Send an idea to the Emi Atelier team.")
+  new SlashCommandBuilder().setName("serverinfo").setDescription("Learn about the Atelier de Emi community."),
+  new SlashCommandBuilder().setName("suggest").setDescription("Send an idea to the Atelier de Emi team.")
     .addStringOption(o => o.setName("idea").setDescription("Your suggestion for the community").setMaxLength(1000).setRequired(true)),
   new SlashCommandBuilder().setName("report").setDescription("Privately contact shrine staff about a concern.")
     .addStringOption(o => o.setName("details").setDescription("Tell staff what happened").setMaxLength(1500).setRequired(true)),
@@ -462,7 +462,7 @@ const moderationCommands = [
     .addIntegerOption(o => o.setName("duration").setDescription("Duration in minutes (15–1440)").setMinValue(15).setMaxValue(1440).setRequired(true))
     .addStringOption(o => o.setName("location").setDescription("Where the event takes place (online or venue)").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("description").setDescription("What members can expect").setMaxLength(1000).setRequired(false)),
-  new SlashCommandBuilder().setName("events").setDescription("See upcoming Emi Atelier community events."),
+  new SlashCommandBuilder().setName("events").setDescription("See upcoming Atelier de Emi community events."),
   new SlashCommandBuilder().setName("spotlight").setDescription("Celebrate a community member's creative work (staff only).")
     .addUserOption(o => o.setName("member").setDescription("Creator to feature").setRequired(true))
     .addStringOption(o => o.setName("category").setDescription("Type of creative work").setRequired(true)
@@ -506,7 +506,7 @@ async function handleModerationCommand(interaction) {
     const creator = interaction.options.getUser("member", true);
     const category = interaction.options.getString("category", true);
     const link = interaction.options.getString("link", true);
-    const message = interaction.options.getString("message") || "Thank you for sharing your creativity with Emi Atelier!";
+    const message = interaction.options.getString("message") || "Thank you for sharing your creativity with Atelier de Emi!";
     let parsed;
     try { parsed = new URL(link); } catch {}
     if (!parsed || parsed.protocol !== "https:") {
@@ -522,7 +522,7 @@ async function handleModerationCommand(interaction) {
         { name: "View their work", value: "[Open featured work](" + link + ")" }
       )
       .setThumbnail(creator.displayAvatarURL({ size: 256 }))
-      .setFooter({ text: "Emi Atelier • celebrating the creativity in our community ♡" })
+      .setFooter({ text: "Atelier de Emi • celebrating the creativity in our community ♡" })
       .setTimestamp();
     await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
     return interaction.reply({ content: "୨୧ Spotlight published in 🌟・creator-spotlights!", flags: MessageFlags.Ephemeral });
@@ -536,7 +536,7 @@ async function handleModerationCommand(interaction) {
     const startInput = interaction.options.getString("start", true);
     const duration = interaction.options.getInteger("duration", true);
     const location = interaction.options.getString("location", true);
-    const description = interaction.options.getString("description") || "Join the Emi Atelier community for this event!";
+    const description = interaction.options.getString("description") || "Join the Atelier de Emi community for this event!";
     const start = new Date(startInput);
     if (!Number.isFinite(start.getTime()) || start.getTime() <= Date.now()) {
       return interaction.reply({ content: "Please provide a valid future date and time in ISO 8601 format, including your UTC offset (for example, 2026-12-01T18:00:00+01:00).", flags: MessageFlags.Ephemeral });
@@ -569,7 +569,7 @@ async function handleModerationCommand(interaction) {
       .sort((a, b) => a.scheduledStartTimestamp - b.scheduledStartTimestamp)
       .slice(0, 10);
     if (!upcoming.length) return interaction.reply({ content: "There are no upcoming community events scheduled yet. Keep an eye on 📢・announcements!", flags: MessageFlags.Ephemeral });
-    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Upcoming at Emi Atelier")
+    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Upcoming at Atelier de Emi")
       .setDescription(upcoming.map(event =>
         "**" + event.name + "**\n<t:" + Math.floor(event.scheduledStartTimestamp / 1000) + ":F> • " +
         (event.entityMetadata?.location || "Location to be announced") + "\n[View event](" + event.url + ")"
@@ -580,11 +580,11 @@ async function handleModerationCommand(interaction) {
 
   if (command === "help") {
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Shrine Assistant — help")
-      .setDescription("Hello! I help keep Emi Atelier organised and welcoming.")
+      .setDescription("Hello! I help keep Atelier de Emi organised and welcoming.")
       .addFields(
         { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/userinfo` — view member information", inline: false },
         { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Share your creativity in the Community Gallery!", inline: false }
-      ).setFooter({ text: "Inspired by Yae Miko and the Grand Narukami Shrine • everyone is welcome ♡" });
+      ).setFooter({ text: "Emi's creative atelier • shrine-inspired, creator-friendly • everyone is welcome ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
@@ -592,12 +592,12 @@ async function handleModerationCommand(interaction) {
     const guild = interaction.guild;
     const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Welcome to " + guild.name)
       .setThumbnail(guild.iconURL({ size: 256 }))
-      .setDescription("A creative community inspired by Yae Miko and the Grand Narukami Shrine. Meet fellow creators, share your work and enjoy the community — no Genshin knowledge required.")
+      .setDescription("Emi's creative space for cosplay, art, photography and crafting, with an atmosphere inspired by Yae Miko and the Grand Narukami Shrine. Discover Emi's projects, meet fellow creators and share your own work — no Genshin knowledge required.")
       .addFields(
         { name: "Members", value: String(guild.memberCount), inline: true },
         { name: "Created", value: "<t:" + Math.floor(guild.createdTimestamp / 1000) + ":D>", inline: true },
         { name: "Explore", value: "Cosplay • Art • Photography • Crafting • Community", inline: false }
-      ).setFooter({ text: "Emi Atelier • create, connect and enjoy ♡" });
+      ).setFooter({ text: "Atelier de Emi • create, connect and enjoy ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
@@ -607,7 +607,7 @@ async function handleModerationCommand(interaction) {
     if (!channel) return interaction.reply({ content: "The suggestions channel is not set up yet. Please ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Community suggestion")
       .setDescription(idea).addFields({ name: "Submitted by", value: interaction.user.toString() })
-      .setFooter({ text: "Emi Atelier • thank you for helping the community grow ♡" }).setTimestamp();
+      .setFooter({ text: "Atelier de Emi • thank you for helping the community grow ♡" }).setTimestamp();
     await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
     return interaction.reply({ content: "Thank you! Your idea has been shared in 💡・suggestions.", flags: MessageFlags.Ephemeral });
   }
@@ -767,7 +767,7 @@ async function handleModerationCommand(interaction) {
 
 const setupCommand = new SlashCommandBuilder()
   .setName("setup")
-  .setDescription("Create the Emi Atelier shrine server template.")
+  .setDescription("Set up the Atelier de Emi creative community.")
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 client.once("clientReady", async () => {
@@ -845,7 +845,7 @@ client.on("guildMemberAdd", async (member) => {
     .setTitle("୨୧ A new guest has arrived!")
     .setDescription("Welcome " + member.toString() + " to **" + member.guild.name + "**! Make yourself at home ♡")
     .setThumbnail(member.user.displayAvatarURL({ size: 256 }))
-    .setFooter({ text: "Emi Atelier • made with love" })
+    .setFooter({ text: "Atelier de Emi • made with love" })
     .setTimestamp();
   await channel.send({ embeds: [embed] }).catch(console.error);
 });
