@@ -50,7 +50,8 @@ Shrine Assistant is the Discord bot for **Atelier de Emi**, a creator community 
 5. In the Discord Developer Portal, enable **Server Members Intent** under Bot → Privileged Gateway Intents.
 6. Invite the bot with the `bot` and `applications.commands` scopes.
 7. Give the bot the permissions it needs (see below), then start it with `npm start`.
-8. Run `npm test` to check the JavaScript syntax.\n9. In the server, run `/setup` and choose **Update** for the normal first setup or later maintenance.
+8. Run `npm test` to check the JavaScript syntax.
+9. In the server, run `/setup` and choose **Update** for the normal first setup or later maintenance.
 
 ## Bot permissions and role hierarchy
 
