@@ -28,7 +28,7 @@ const purple = 0xC9B6E4;
 const welcomeEmbed = (guild) => new EmbedBuilder()
   .setColor(pink)
   .setTitle("୨୧ Welcome to the shrine!")
-  .setDescription("Welcome to Atelier de Emi — Emi's creative space for cosplay, art, photography, crafting and community.\n\nWith the elegance and playful spirit of the Grand Narukami Shrine as inspiration, this is a place to share projects, meet fellow creators and find inspiration.\n\nEmi's creative journey is at the heart of the atelier, and everyone is welcome to add their own creativity to it. No Genshin knowledge required!")
+  .setDescription("Welcome to Atelier de Emi, the community from Emi Atelier. This is Emi's creative space for cosplay, art, photography, crafting and community.\n\nThe elegance and playful spirit of the Grand Narukami Shrine inspire the atmosphere, while Emi's creative journey and projects are at the heart of the atelier. Everyone is welcome to share their own creativity too. No Genshin knowledge required!")
   .setThumbnail(guild.iconURL({ size: 256 }))
   .setFooter({ text: "Atelier de Emi • made with love" })
   .setTimestamp();
@@ -68,6 +68,7 @@ const staffGuideEmbed = () => new EmbedBuilder()
     { name: "Warnings", value: "`/warn member reason` — record a warning\n`/warnings member` — view warning history\n`/clearwarnings member` — clear recorded warnings", inline: false },
     { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\n`/untimeout member reason` — remove a timeout\n`/kick member reason` — remove a member\n`/ban member reason` — ban a member", inline: false },
     { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\n`/lock reason` and `/unlock` — lock or restore the current channel\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
+    { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event", inline: false },
     { name: "Information", value: "`/userinfo member` — view basic member information\n`/staffhelp` — show this guide", inline: false },
     { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
     { name: "Staff expectations", value: "Keep reasons professional, do not share staff-only information, and escalate uncertain or serious cases to the Guuji. Never use moderation tools to settle personal disagreements.", inline: false }
