@@ -33,6 +33,12 @@ const welcomeEmbed = (guild) => new EmbedBuilder()
   .setFooter({ text: "Atelier de Emi • made with love" })
   .setTimestamp();
 
+const introductionEmbed = () => new EmbedBuilder()
+  .setColor(pink)
+  .setTitle("୨୧ A little introduction")
+  .setDescription("We are happy you are here! Share as much or as little as you like. You can use these little prompts to get started:\n\n**♡ What should we call you?**\nA nickname is perfect — no need to share your real name.\n\n**♡ What do you enjoy creating?**\nCosplay, art, photography, crafting, writing, gaming, or something completely different?\n\n**♡ What are you working on lately?**\nA current project, a future dream, or just something you are excited about.\n\n**♡ What brought you to the atelier?**\nFriends, inspiration, creative support, or curiosity?\n\nNo pressure to answer everything. Be kind, say hello, and make yourself at home!")
+  .setFooter({ text: "Atelier de Emi • every creator has a story ♡" });
+
 const rulesEmbed = () => new EmbedBuilder()
   .setColor(purple)
   .setTitle("୨୧ Shrine guidelines")
@@ -58,7 +64,7 @@ const startHereEmbed = () => new EmbedBuilder()
     "**04 — Explore and join in**\nBrowse the gallery and 🎐・creative-prompts, chat in 💬・general, and use 💬・gallery-chat to talk about creative posts.\n\n" +
     "**05 — Make a creator profile**\nUse /profile-set to introduce your creative interests and work. Browse shared profiles with /creators, or view one with /profile-view. This is optional, and you can remove your profile at any time with /profile-clear.\n\n" +
     "**06 — Follow Emi's creative journey**\nVisit 📓・emi-updates for Emi Atelier project news and personal creative progress.\n\n" +
-    "**07 — Share an idea or need help?**\nUse /suggest to share a community idea, or /report to contact staff privately. You can also ask a shrine staff member for help. Never share passwords or sensitive personal information.\n\n**🧪 Helping test the shrine?**\nUse /bug-report to report something broken, or /feedback to tell us what feels great and what could be improved. These submissions go privately to the staff team.\n\n**A little note**\nAtelier de Emi is Emi's creative space, with a look and atmosphere inspired by Yae Miko and the Grand Narukami Shrine. Emi's projects and creative journey are part of its identity, while every member is encouraged to share their own work and interests. You do not need to know Genshin Impact to belong here."
+    "**07 — Share an idea or need help?**\nUse /suggest to share a community idea, or /report to contact staff privately. You can also ask a shrine staff member for help. Never share passwords or sensitive personal information.\n\n**🧪 Helping test the shrine?**\nUse /tester-start for the checklist, /bug-report to report something broken, or /feedback to tell us what feels great and what could be improved. Visit 🧪・tester-guide and 🧪・tester-lounge too. Submissions go privately to the staff team.\n\n**A little note**\nAtelier de Emi is Emi's creative space, with a look and atmosphere inspired by Yae Miko and the Grand Narukami Shrine. Emi's projects and creative journey are part of its identity, while every member is encouraged to share their own work and interests. You do not need to know Genshin Impact to belong here."
   )
   .setFooter({ text: "Atelier de Emi • make yourself at home ♡" });
 
@@ -449,6 +455,7 @@ async function setupShrine(guild) {
   await ensureEmbed(channels["🌱・start-here"], "୨୧ Your first steps at the shrine", startHereEmbed());
   await ensureEmbed(channels["🧪・tester-guide"], "୨୧ Shrine tester field guide", testerGuideEmbed());
   await ensureEmbed(channels["🌸・welcome"], "୨୧ Welcome to the shrine!", welcomeEmbed(guild));
+  await ensureEmbed(channels["🎀・introductions"], "୨୧ A little introduction", introductionEmbed());
   await ensureEmbed(channels["📜・rules"], "୨୧ Shrine guidelines", rulesEmbed());
   await ensureEmbed(channels["📖・staff-command-guide"], "୨୧ Shrine Assistant — staff command guide", staffGuideEmbed());
   await ensureRolePanel(channels["🎭・choose-roles"]);
@@ -518,6 +525,7 @@ const moderationCommands = [
     .addStringOption(o => o.setName("topic").setDescription("What is your feedback about?").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("details").setDescription("What works well, or what could be better?").setMaxLength(1500).setRequired(true)),
   new SlashCommandBuilder().setName("tester-start").setDescription("Show the Shrine Assistant tester checklist."),
+  new SlashCommandBuilder().setName("icebreaker").setDescription("Share a fun conversation starter in the community."),
   new SlashCommandBuilder().setName("event-create").setDescription("Create a community event (staff only).")
     .addStringOption(o => o.setName("title").setDescription("Name of the event").setMaxLength(100).setRequired(true))
     .addStringOption(o => o.setName("start").setDescription("Start date and time in ISO 8601 format, e.g. 2026-12-01T18:00:00+01:00").setRequired(true))
@@ -845,7 +853,7 @@ async function handleModerationCommand(interaction) {
       .setDescription("Hello! I help keep Atelier de Emi organised and welcoming.")
       .addFields(
         { name: "Emi Atelier", value: "`/emi-update` — publish a creator update (owner only)", inline: false },
-        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/bug-report` — privately report a bot/server issue\n`/feedback` — privately share tester feedback\n`/tester-start` — show the tester checklist\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/project-update project progress link` — share your creative progress\n`/feedback-request project question link` — ask for constructive feedback\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
+        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/bug-report` — privately report a bot/server issue\n`/feedback` — privately share tester feedback\n`/tester-start` — show the tester checklist\n`/icebreaker` — post a fun conversation starter\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/project-update project progress link` — share your creative progress\n`/feedback-request project question link` — ask for constructive feedback\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
         { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Browse 🎐・creative-prompts for inspiration, then share your take in the Community Gallery!", inline: false }
       ).setFooter({ text: "Emi Atelier • shrine-inspired, creator-friendly • everyone is welcome ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
@@ -875,6 +883,25 @@ async function handleModerationCommand(interaction) {
     await suggestionMessage.react("👍").catch(() => {});
     await suggestionMessage.react("👎").catch(() => {});
     return interaction.reply({ content: "Thank you! Your idea has been shared in 💡・suggestions. Members can react with 👍 or 👎 to give feedback.", flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "icebreaker") {
+    const prompts = [
+      "What is one creative skill you would love to learn this year?",
+      "If you could bring any character to life as a cosplay, who would you choose?",
+      "What is your favourite little detail in something you have made?",
+      "What music, show, or game has been inspiring you lately?",
+      "Would you rather spend a day sewing, painting, photographing, or crafting props?",
+      "What is one project idea you keep coming back to?",
+      "What is a small creative win you are proud of?",
+      "If you could collaborate with any creator, what would you make together?"
+    ];
+    const prompt = prompts[Math.floor(Math.random() * prompts.length)];
+    const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "💬・general");
+    if (!channel) return interaction.reply({ content: "The community chat is not set up yet. Ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ A little conversation starter").setDescription(prompt).setFooter({ text: "Atelier de Emi • join in whenever you like ♡" });
+    await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
+    return interaction.reply({ content: "A conversation starter has been posted in 💬・general!", flags: MessageFlags.Ephemeral });
   }
 
   if (command === "tester-start") {
