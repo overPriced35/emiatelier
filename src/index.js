@@ -318,7 +318,9 @@ async function setupShrine(guild) {
   await guild.roles.fetch();
 
   const mainCategory = await ensureCategory(guild, "⛩️・THE SHRINE");
-  const galleryCategory = await ensureCategory(guild, "🌸・COMMUNITY GALLERY");
+  const communityCategory = await ensureCategory(guild, "🌸・COMMUNITY HALL");
+  const creatorCategory = await ensureCategory(guild, "🎐・CREATOR'S CORNER");
+  const galleryCategory = await ensureCategory(guild, "🎀・COMMUNITY GALLERY");
   const staffCategory = await ensureCategory(guild, "⛩️・SHRINE STAFF", [{
     id: guild.roles.everyone.id,
     deny: [PermissionFlagsBits.ViewChannel]
@@ -330,10 +332,14 @@ async function setupShrine(guild) {
   for (const info of rolePlan) await ensureRole(guild, info);
 
   const channels = {};
+  const communityChannels = ["💬・general", "🎀・introductions", "🤖・bot-commands"];
+  const creatorChannels = ["🌟・creator-spotlights", "🎐・creative-prompts", "📓・emi-updates"];
   for (const info of channelPlan) {
-    const readOnly = ["🌸・welcome", "📜・rules", "📢・announcements", "🎭・choose-roles", "🌟・creator-spotlights", "🎐・creative-prompts", "📓・emi-updates"].includes(info.name);
+    const category = communityChannels.includes(info.name) ? communityCategory
+      : creatorChannels.includes(info.name) ? creatorCategory : mainCategory;
+    const readOnly = ["🌸・welcome", "📜・rules", "📢・announcements", "🎭・choose-roles", ...creatorChannels].includes(info.name);
     const overwrites = standardChannelPermissions(guild, readOnly ? "readOnly" : "chat");
-    if (["📢・announcements", "🌟・creator-spotlights", "🎐・creative-prompts", "📓・emi-updates"].includes(info.name)) {
+    if (["📢・announcements", ...creatorChannels].includes(info.name)) {
       for (const roleName of ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]) {
         const staffRole = guild.roles.cache.find(role => role.name === roleName);
         if (staffRole) overwrites.push({
@@ -378,17 +384,18 @@ async function setupShrine(guild) {
     );
   }
 
-  channels["💬・gallery-chat"] = await ensureChannel(guild, galleryCategory, {
-    name: "💬・gallery-chat",
-    topic: "Chat about gallery posts, share ideas, and give creators encouragement."
-  }, standardChannelPermissions(guild, "chat"));
+
 
   channels[moderationLogName] = await ensureChannel(guild, staffCategory, {
     name: moderationLogName,
     topic: "Private audit trail for moderation actions taken by Shrine Assistant."
   }, staffReadOnlyPermissions(guild, ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]));
 
-  channels["💡・suggestions"] = await ensureChannel(guild, mainCategory, { name: "💡・suggestions", topic: "Community ideas submitted through /suggest." }, standardChannelPermissions(guild, "readOnly"));
+  channels["💡・suggestions"] = await ensureChannel(guild, communityCategory, { name: "💡・suggestions", topic: "Community ideas submitted through /suggest. React with 👍 to support an idea or 👎 if it is not a fit." }, standardChannelPermissions(guild, "readOnly"));
+  channels["💬・gallery-chat"] = await ensureChannel(guild, communityCategory, {
+    name: "💬・gallery-chat",
+    topic: "Chat about gallery posts, share ideas, and give creators encouragement."
+  }, standardChannelPermissions(guild, "chat"));
 
   const staffChannels = [
     { name: "📖・staff-command-guide", topic: "Private reference for Shrine Assistant staff commands and moderation expectations.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden", "🪷・Miko Apprentice"] },
@@ -415,6 +422,8 @@ async function setupShrine(guild) {
   config[guild.id] = {
     ...(config[guild.id] || {}),
     categoryId: mainCategory.id,
+    communityCategoryId: communityCategory.id,
+    creatorCategoryId: creatorCategory.id,
     welcomeChannelId: channels["🌸・welcome"].id,
     roleChannelId: channels["🎭・choose-roles"].id,
     galleryCategoryId: galleryCategory.id,
