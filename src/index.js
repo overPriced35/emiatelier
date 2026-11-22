@@ -471,6 +471,9 @@ const moderationCommands = [
     .addStringOption(o => o.setName("theme").setDescription("Cosplay, art, photography, crafting or anything goes").setMaxLength(80).setRequired(true))
     .addStringOption(o => o.setName("description").setDescription("What should members create or try?").setMaxLength(1200).setRequired(true))
     .addStringOption(o => o.setName("deadline").setDescription("Optional deadline, e.g. 15 December or no deadline").setMaxLength(80).setRequired(false)),
+  new SlashCommandBuilder().setName("kudos").setDescription("Give a community member a little public appreciation.")
+    .addUserOption(o => o.setName("member").setDescription("The creator you want to appreciate").setRequired(true))
+    .addStringOption(o => o.setName("message").setDescription("What would you like to appreciate them for?").setMaxLength(400).setRequired(true)),
   new SlashCommandBuilder().setName("profile-set").setDescription("Create or update your creator profile.")
     .addStringOption(o => o.setName("interests").setDescription("Your creative interests").setMaxLength(120).setRequired(true))
     .addStringOption(o => o.setName("about").setDescription("A short introduction about you and your work").setMaxLength(400).setRequired(true))
@@ -534,6 +537,26 @@ async function handleModerationCommand(interaction) {
     if (deadline) embed.addFields({ name: "Deadline", value: deadline, inline: true });
     await channel.send({ content: "୨୧ A new creative prompt has arrived! Share your take in the relevant gallery channel.", embeds: [embed], allowedMentions: { parse: [] } });
     return interaction.reply({ content: "୨୧ Your creative prompt has been posted in 🎐・creative-prompts!", flags: MessageFlags.Ephemeral });
+  }
+
+  if (command === "kudos") {
+    const recipient = interaction.options.getUser("member", true);
+    const message = interaction.options.getString("message", true);
+    if (recipient.id === interaction.user.id) return interaction.reply({ content: "Kudos are for celebrating someone else — give another creator their moment!", flags: MessageFlags.Ephemeral });
+    if (recipient.bot) return interaction.reply({ content: "Let's save the kudos for a fellow human creator ♡", flags: MessageFlags.Ephemeral });
+    const channel = interaction.guild.channels.cache.find(item => item.type === ChannelType.GuildText && item.name === "🌟・creator-spotlights");
+    if (!channel) return interaction.reply({ content: "The creator spotlights channel isn't set up yet. Ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ A little appreciation!")
+      .setDescription(message)
+      .addFields(
+        { name: "For", value: recipient.toString(), inline: true },
+        { name: "From", value: interaction.user.toString(), inline: true }
+      )
+      .setThumbnail(recipient.displayAvatarURL({ size: 256 }))
+      .setFooter({ text: "Emi Atelier • kindness looks good on everyone ♡" })
+      .setTimestamp();
+    await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
+    return interaction.reply({ content: "୨୧ Your kudos have been shared in 🌟・creator-spotlights!", flags: MessageFlags.Ephemeral });
   }
 
   if (command === "profile-set") {
@@ -682,7 +705,7 @@ async function handleModerationCommand(interaction) {
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Shrine Assistant — help")
       .setDescription("Hello! I help keep Atelier de Emi organised and welcoming.")
       .addFields(
-        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
+        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`/serverinfo` — learn about this community\n`/events` — see upcoming community events\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
         { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Browse 🎐・creative-prompts for inspiration, then share your take in the Community Gallery!", inline: false }
       ).setFooter({ text: "Emi Atelier • shrine-inspired, creator-friendly • everyone is welcome ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
