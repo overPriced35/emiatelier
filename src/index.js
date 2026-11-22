@@ -56,7 +56,7 @@ const startHereEmbed = () => new EmbedBuilder()
     "**02 — Introduce yourself**\nSay hello in 🎀・introductions. Share only what you're comfortable sharing.\n\n" +
     "**03 — Choose your interests**\nVisit 🎭・choose-roles and select Cosplayer, Artist, Photographer, or Crafter. These roles unlock posting in their matching gallery spaces.\n\n" +
     "**04 — Explore and join in**\nBrowse the gallery, chat in 💬・general, and use 💬・gallery-chat to talk about creative posts.\n\n" +
-    "**05 — Need help?**\nContact a member of the shrine staff. Never share passwords, private details, or sensitive personal information."
+    "**05 — Share an idea or need help?**\nUse /suggest to share an idea, or /report to contact staff privately. You can also ask a shrine staff member for help. Never share passwords or sensitive personal information.\n\n**A little note**\nThis community is inspired by Yae Miko and the Grand Narukami Shrine, but you do not need to know Genshin Impact to belong here. Cosplay, creativity, friendship and fun come first."
   )
   .setFooter({ text: "Emi Atelier • make yourself at home ♡" });
 
