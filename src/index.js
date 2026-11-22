@@ -69,6 +69,7 @@ const staffGuideEmbed = () => new EmbedBuilder()
     { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\\n`/untimeout member reason` — remove a timeout\\n`/kick member reason` — remove a member\\n`/ban member reason` — ban a member", inline: false },
     { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\\n`/lock reason` and `/unlock` — lock or restore the current channel\\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
     { name: "Information", value: "`/userinfo member` — view basic member information\\n`/staffhelp` — show this guide", inline: false },
+    { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\\nSenior Shrine Maiden: all of the above plus kicks.\\nGuuji: full administration, including bans and channel management.\\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
     { name: "Staff expectations", value: "Keep reasons professional, do not share staff-only information, and escalate uncertain or serious cases to the Guuji. Never use moderation tools to settle personal disagreements.", inline: false }
   )
   .setFooter({ text: "Emi Atelier • internal staff reference" });
