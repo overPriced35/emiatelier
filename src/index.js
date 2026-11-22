@@ -52,11 +52,11 @@ const startHereEmbed = () => new EmbedBuilder()
   .setColor(pink)
   .setTitle("୨୧ Your first steps at the shrine")
   .setDescription(
-    "**01 — Read the guidelines**\\nVisit 📜・rules to learn how we keep the shrine welcoming.\\n\\n" +
-    "**02 — Introduce yourself**\\nSay hello in 🎀・introductions. Share only what you're comfortable sharing.\\n\\n" +
-    "**03 — Choose your interests**\\nVisit 🎭・choose-roles and select Cosplayer, Artist, Photographer, or Crafter. These roles unlock posting in their matching gallery spaces.\\n\\n" +
-    "**04 — Explore and join in**\\nBrowse the gallery, chat in 💬・general, and use 💬・gallery-chat to talk about creative posts.\\n\\n" +
-    "**05 — Need help?**\\nContact a member of the shrine staff. Never share passwords, private details, or sensitive personal information."
+    "**01 — Read the guidelines**\nVisit 📜・rules to learn how we keep the shrine welcoming.\n\n" +
+    "**02 — Introduce yourself**\nSay hello in 🎀・introductions. Share only what you're comfortable sharing.\n\n" +
+    "**03 — Choose your interests**\nVisit 🎭・choose-roles and select Cosplayer, Artist, Photographer, or Crafter. These roles unlock posting in their matching gallery spaces.\n\n" +
+    "**04 — Explore and join in**\nBrowse the gallery, chat in 💬・general, and use 💬・gallery-chat to talk about creative posts.\n\n" +
+    "**05 — Need help?**\nContact a member of the shrine staff. Never share passwords, private details, or sensitive personal information."
   )
   .setFooter({ text: "Emi Atelier • make yourself at home ♡" });
 
@@ -65,11 +65,11 @@ const staffGuideEmbed = () => new EmbedBuilder()
   .setTitle("୨୧ Shrine Assistant — staff command guide")
   .setDescription("Use commands responsibly. Add a clear, factual reason to every moderation action. Commands are limited by Discord role hierarchy and the bot's permissions.")
   .addFields(
-    { name: "Warnings", value: "`/warn member reason` — record a warning\\n`/warnings member` — view warning history\\n`/clearwarnings member` — clear recorded warnings", inline: false },
-    { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\\n`/untimeout member reason` — remove a timeout\\n`/kick member reason` — remove a member\\n`/ban member reason` — ban a member", inline: false },
-    { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\\n`/lock reason` and `/unlock` — lock or restore the current channel\\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
-    { name: "Information", value: "`/userinfo member` — view basic member information\\n`/staffhelp` — show this guide", inline: false },
-    { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\\nSenior Shrine Maiden: all of the above plus kicks.\\nGuuji: full administration, including bans and channel management.\\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
+    { name: "Warnings", value: "`/warn member reason` — record a warning\n`/warnings member` — view warning history\n`/clearwarnings member` — clear recorded warnings", inline: false },
+    { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\n`/untimeout member reason` — remove a timeout\n`/kick member reason` — remove a member\n`/ban member reason` — ban a member", inline: false },
+    { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\n`/lock reason` and `/unlock` — lock or restore the current channel\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
+    { name: "Information", value: "`/userinfo member` — view basic member information\n`/staffhelp` — show this guide", inline: false },
+    { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
     { name: "Staff expectations", value: "Keep reasons professional, do not share staff-only information, and escalate uncertain or serious cases to the Guuji. Never use moderation tools to settle personal disagreements.", inline: false }
   )
   .setFooter({ text: "Emi Atelier • internal staff reference" });
