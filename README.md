@@ -7,6 +7,8 @@ Shrine Assistant is the Discord bot for **Atelier de Emi**, a creator community 
 ### Server setup and onboarding
 - `/setup` creates or updates the planned server categories, channels, roles, permissions and information panels.
 - `/onboarding-setup` configures Discord's native Community Onboarding with seven default channels, creative-interest choices that assign matching roles and gallery access, and optional announcement/event notification roles. It requires Manage Server and Manage Roles for both the administrator running it and the bot.
+- `/setup` also assigns the native Community Rules channel, Community Updates and Safety Alerts channels, system welcome channel, and server description. The rules channel is `📜・rules`; Community Updates and Safety Alerts both go to the private `🔒・guuji-office`; the system channel is `🌸・welcome`.
+- `📢・announcements` is created as a native Discord Announcement channel. If an older regular text channel already has that name, `/setup` renames it to `📢・announcements-archive` to preserve its message history, then creates the native Announcement channel.
 - The **Update** option preserves existing channels and messages while creating missing items and refreshing planned permissions and bot panels.
 - The **Fresh reset** option is destructive: it deletes server channels and categories and most non-managed roles before rebuilding the layout. Do not use it unless you intentionally want to wipe existing server content.
 - New members receive the `✨・Shrine Visitor` role and a welcome message.
@@ -85,7 +87,8 @@ The bot's own role does not automatically make a person staff. Staff roles are a
 ## Operational notes
 
 - Slash commands are registered for the configured `GUILD_ID` when the bot starts.
-- After deploying onboarding changes, run `/setup` → **Update** to refresh the start-here guide, then run `/onboarding-setup` once to publish the native Discord onboarding flow.
+- After deploying onboarding changes, run `/setup` → **Update** to refresh the start-here guide and Community settings, then run `/onboarding-setup` once to publish the native Discord onboarding flow.
+- Discord's Server Guide (Welcome Sign, 3–5 New Member To-Dos, and Resource Pages) still needs a one-time manual configuration in Server Settings → Onboarding → Server Guide. The supported public bot API exposes onboarding questions/default channels, but not these Server Guide fields.
 - Re-run `/setup` → **Update** after other server-layout changes to refresh planned channels, permissions and bot panels. Existing channel messages are generally preserved.
 - Update also retires the old tester-only channels and role from earlier versions; there is no active tester programme.
 - Do not use **Fresh reset** as a routine update. It permanently removes channels, messages, forum posts and most roles.
