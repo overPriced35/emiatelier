@@ -246,6 +246,25 @@ function standardChannelPermissions(guild, mode) {
   }];
 }
 
+function staffReadOnlyPermissions(guild, allowedRoleNames) {
+  const overwrites = [{
+    id: guild.roles.everyone.id,
+    deny: [PermissionFlagsBits.ViewChannel]
+  }, {
+    id: client.user.id,
+    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages]
+  }];
+  for (const roleName of allowedRoleNames) {
+    const role = guild.roles.cache.find((item) => item.name === roleName);
+    if (role) overwrites.push({
+      id: role.id,
+      allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+      deny: [PermissionFlagsBits.SendMessages]
+    });
+  }
+  return overwrites;
+}
+
 function staffChannelPermissions(guild, allowedRoleNames) {
   const overwrites = [{
     id: guild.roles.everyone.id,
@@ -360,7 +379,7 @@ async function setupShrine(guild) {
   channels[moderationLogName] = await ensureChannel(guild, staffCategory, {
     name: moderationLogName,
     topic: "Private audit trail for moderation actions taken by Shrine Assistant."
-  }, staffChannelPermissions(guild, ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]));
+  }, staffReadOnlyPermissions(guild, ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden"]));
 
   const staffChannels = [
     { name: "📖・staff-command-guide", topic: "Private reference for Shrine Assistant staff commands and moderation expectations.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden", "🪷・Miko Apprentice"] },
@@ -370,9 +389,10 @@ async function setupShrine(guild) {
     { name: "🪷・miko-training", topic: "Training and guidance for miko apprentices.", roles: ["⛩️・Guuji", "🌸・Senior Shrine Maiden", "🦊・Shrine Maiden", "🪷・Miko Apprentice"] }
   ];
   for (const info of staffChannels) {
-    channels[info.name] = await ensureChannel(
-      guild, staffCategory, info, staffChannelPermissions(guild, info.roles)
-    );
+    const permissions = info.name === "📖・staff-command-guide"
+      ? staffReadOnlyPermissions(guild, info.roles)
+      : staffChannelPermissions(guild, info.roles);
+    channels[info.name] = await ensureChannel(guild, staffCategory, info, permissions);
   }
 
   await ensureEmbed(channels["🌱・start-here"], "୨୧ Your first steps at the shrine", startHereEmbed());
