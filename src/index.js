@@ -76,7 +76,7 @@ const staffGuideEmbed = () => new EmbedBuilder()
     { name: "Warnings", value: "`/warn member reason` — record a warning\n`/warnings member` — view warning history\n`/clearwarnings member` — clear recorded warnings", inline: false },
     { name: "Member actions", value: "`/timeout member minutes reason` — apply a timeout (up to 28 days)\n`/untimeout member reason` — remove a timeout\n`/kick member reason` — remove a member\n`/ban member reason` — ban a member", inline: false },
     { name: "Channel tools", value: "`/clear amount` — delete up to 100 recent messages (not messages older than 14 days)\n`/lock reason` and `/unlock` — lock or restore the current channel\n`/slowmode seconds` — set slowmode; use 0 to disable", inline: false },
-    { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event\\n`/event-cancel` — cancel a scheduled event", inline: false },
+    { name: "Community features", value: "`/prompt title theme description deadline` — publish a creative prompt\n`/spotlight member category link message` — celebrate a creator\n`/event-create` — schedule a community event\n`/event-cancel` — cancel a scheduled event", inline: false },
     { name: "Community support", value: "`/bug-report` — privately report a bot or server issue\n`/feedback` — privately share feedback about the community or bot\n`/report` — privately contact staff about a concern", inline: false },
     { name: "Information", value: "`/userinfo member` — view basic member information\n`/staffhelp` — show this guide", inline: false },
     { name: "Role permissions", value: "Shrine Maiden: warnings, warning history, timeouts, message clearing.\nSenior Shrine Maiden: all of the above plus kicks.\nGuuji: full administration, including bans and channel management.\nMiko Apprentice: staff spaces and guidance only; no moderation powers.", inline: false },
@@ -908,7 +908,7 @@ async function handleModerationCommand(interaction) {
     }
     const eventId = interaction.options.getString("event_id", true).trim();
     const reason = interaction.options.getString("reason") || "Cancelled by " + interaction.user.tag;
-    if (!/^\\d{17,20}$/.test(eventId)) {
+    if (!/^\d{17,20}$/.test(eventId)) {
       return interaction.reply({ content: "Please provide the numeric event ID shown by /events.", flags: MessageFlags.Ephemeral });
     }
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -917,7 +917,7 @@ async function handleModerationCommand(interaction) {
       if (!event) return interaction.editReply("I couldn't find that scheduled event. It may already have ended or been removed.");
       const eventName = event.name;
       await event.delete(reason);
-      await sendModerationLog(interaction.guild, "୨୧ Community event cancelled", "**Event:** " + eventName + "\\n**Event ID:** " + eventId + "\\n**Cancelled by:** " + interaction.user.toString() + "\\n**Reason:** " + reason, 0xD98B8B);
+      await sendModerationLog(interaction.guild, "୨୧ Community event cancelled", "**Event:** " + eventName + "\n**Event ID:** " + eventId + "\n**Cancelled by:** " + interaction.user.toString() + "\n**Reason:** " + reason, 0xD98B8B);
       return interaction.editReply("୨୧ **" + eventName + "** has been cancelled and removed from the server's event list.");
     } catch (error) {
       console.error("Event cancellation failed:", error);
