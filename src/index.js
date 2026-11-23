@@ -374,6 +374,45 @@ async function ensureStartHereLinks(channel, guild, channels) {
   await existing.edit({ components: [row] });
 }
 
+async function refreshLegacyBranding(guild) {
+  const oldBrandPattern = /Atelier\\s+de\\s+Emi/gi;
+  let updatedMessages = 0;
+  const channels = guild.channels.cache.filter(channel =>
+    [ChannelType.GuildText, ChannelType.GuildAnnouncement].includes(channel.type)
+  );
+  for (const channel of channels.values()) {
+    const messages = await channel.messages.fetch({ limit: 100 }).catch(() => null);
+    if (!messages) continue;
+    for (const message of messages.values()) {
+      if (message.author.id !== client.user.id) continue;
+      const replaceText = value => typeof value === "string"
+        ? value.replace(oldBrandPattern, "Emi Atelier")
+        : value;
+      const replaceDeep = value => {
+        if (typeof value === "string") return replaceText(value);
+        if (Array.isArray(value)) return value.map(replaceDeep);
+        if (value && typeof value === "object") {
+          return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, replaceDeep(item)]));
+        }
+        return value;
+      };
+      const content = replaceText(message.content);
+      const embeds = message.embeds.map(embed => EmbedBuilder.from(replaceDeep(embed.toJSON())));
+      const contentChanged = content !== message.content;
+      const embedsChanged = message.embeds.some((embed, index) =>
+        JSON.stringify(embeds[index].toJSON()) !== JSON.stringify(embed.toJSON())
+      );
+      if (!contentChanged && !embedsChanged) continue;
+      await message.edit({
+        ...(contentChanged ? { content } : {}),
+        ...(embedsChanged ? { embeds } : {})
+      }).catch(error => console.warn("Could not refresh old branding in #" + channel.name + ":", error.message));
+      updatedMessages++;
+    }
+  }
+  if (updatedMessages) console.log("Refreshed old Atelier de Emi branding in " + updatedMessages + " bot message(s).");
+}
+
 async function ensureTicketPanel(channel) {
   const messages = await channel.messages.fetch({ limit: 30 }).catch(() => null);
   const existing = messages && messages.find(message =>
@@ -529,6 +568,7 @@ async function setupShrine(guild) {
   await ensureEmbed(channels["📖・staff-command-guide"], "୨୧ Shrine Assistant — staff command guide", staffGuideEmbed());
   await ensureRolePanel(channels["🎭・choose-roles"]);
   await ensureTicketPanel(channels["🆘・contact-staff"]);
+  await refreshLegacyBranding(guild);
 
   // Set Discord's native Community channel assignments and server description.
   const guujiOffice = channels["🔒・guuji-office"];
