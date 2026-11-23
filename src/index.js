@@ -1078,35 +1078,47 @@ async function handleModerationCommand(interaction) {
   if (command === "ping") {
     const latency = Math.round(client.ws.ping);
     const startedAt = client.readyAt ? Math.floor(client.readyAt.getTime() / 1000) : null;
-    const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Shrine Assistant status")
+    const isDutch = getMemberLanguage(interaction) === "nl";
+    const embed = new EmbedBuilder().setColor(purple)
+      .setTitle(isDutch ? "୨୧ Shrine Assistant-status" : "୨୧ Shrine Assistant status")
       .addFields(
-        { name: "Gateway latency", value: latency >= 0 ? latency + " ms" : "Connecting", inline: true },
-        { name: "Bot uptime", value: startedAt ? "<t:" + startedAt + ":R>" : "Unavailable", inline: true }
+        { name: isDutch ? "Gatewayvertraging" : "Gateway latency", value: latency >= 0 ? latency + " ms" : (isDutch ? "Verbinden" : "Connecting"), inline: true },
+        { name: isDutch ? "Bot-activiteit" : "Bot uptime", value: startedAt ? "<t:" + startedAt + ":R>" : (isDutch ? "Niet beschikbaar" : "Unavailable"), inline: true }
       )
-      .setFooter({ text: "Emi Atelier • if something seems wrong, use /bug-report ♡" });
+      .setFooter({ text: "Emi Atelier • " + (isDutch ? "gebruik /bug-report als er iets niet goed werkt ♡" : "if something seems wrong, use /bug-report ♡") });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
   if (command === "help") {
-    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Shrine Assistant — help")
-      .setDescription("Hello! I help keep Emi Atelier organised and welcoming.")
+    const isDutch = getMemberLanguage(interaction) === "nl";
+    const embed = new EmbedBuilder().setColor(pink)
+      .setTitle(isDutch ? "୨୧ Shrine Assistant — hulp" : "୨୧ Shrine Assistant — help")
+      .setDescription(isDutch ? "Hoi! Ik help Emi Atelier georganiseerd en gastvrij te houden." : "Hello! I help keep Emi Atelier organised and welcoming.")
       .addFields(
-        { name: "Emi Atelier", value: "`/emi-update` — publish a creator update (owner only)", inline: false },
-        { name: "Community", value: "`/suggest` — send an idea to the team\n`/report` — privately contact shrine staff\n`🆘・contact-staff` — open a private support conversation\n`/bug-report` — privately report a bot/server issue\n`/feedback` — privately share community feedback\n`/icebreaker` — post a fun conversation starter\n`/serverinfo` — learn about this community\n`/ping` — check Shrine Assistant connection status\n`/events` — see upcoming community events (includes event IDs for staff)\n`/project-update project progress link` — share your creative progress\n`/feedback-request project question link` — ask for constructive feedback\n`/kudos member message` — appreciate a fellow creator\n`/profile-set` — create or update your creator profile\n`/profile-view` — view a creator profile\n`/profile-clear` — remove your profile\n`/creators page` — browse shared creator profiles\n`/userinfo` — view member information", inline: false },
-        { name: "Getting started", value: "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Browse 🎐・creative-prompts for inspiration, then share your take in the Community Gallery!", inline: false }
-      ).setFooter({ text: "Emi Atelier • shrine-inspired, creator-friendly • everyone is welcome ♡" });
+        { name: "Emi Atelier", value: isDutch ? "/emi-update — deel een update over Emi's creatieve projecten (alleen eigenaar)" : "/emi-update — publish a creator update (owner only)", inline: false },
+        { name: "Community", value: isDutch
+          ? "/language — kies Nederlands of English\n/suggest — deel een idee met het team\n/report — neem privé contact op met het team\n🆘・contact-staff — open een privégesprek\n/bug-report — meld privé een probleem met de bot of server\n/feedback — deel privé je feedback\n/icebreaker — plaats een gespreksstarter\n/serverinfo — informatie over deze community\n/ping — controleer de botverbinding\n/events — bekijk aankomende evenementen\n/project-update — deel je projectvoortgang\n/feedback-request — vraag om feedback\n/kudos — waardeer een andere maker\n/profile-set — maak of wijzig je makersprofiel\n/profile-view — bekijk een makersprofiel\n/profile-clear — verwijder je profiel\n/creators — bekijk gedeelde makersprofielen\n/userinfo — bekijk ledeninformatie"
+          : "/language — choose English or Nederlands\n/suggest — send an idea to the team\n/report — privately contact shrine staff\n🆘・contact-staff — open a private support conversation\n/bug-report — privately report a bot/server issue\n/feedback — privately share community feedback\n/icebreaker — post a conversation starter\n/serverinfo — learn about this community\n/ping — check the bot connection\n/events — see upcoming community events\n/project-update — share your project progress\n/feedback-request — ask for feedback\n/kudos — appreciate a fellow creator\n/profile-set — create or update your creator profile\n/profile-view — view a creator profile\n/profile-clear — remove your profile\n/creators — browse shared creator profiles\n/userinfo — view member information", inline: false },
+        { name: isDutch ? "Aan de slag" : "Getting started", value: isDutch
+          ? "Lees 📜・rules, stel jezelf voor in 🎀・introductions en kies je interesses in 🎭・choose-roles. Bekijk 🎐・creative-prompts voor inspiratie en deel je creaties in de Community Gallery!"
+          : "Read 📜・rules, introduce yourself in 🎀・introductions, and choose your interests in 🎭・choose-roles. Browse 🎐・creative-prompts for inspiration, then share your work in the Community Gallery!", inline: false }
+      ).setFooter({ text: "Emi Atelier • " + (isDutch ? "iedereen is welkom ♡" : "shrine-inspired, creator-friendly • everyone is welcome ♡") });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
   if (command === "serverinfo") {
     const guild = interaction.guild;
-    const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Welcome to " + guild.name)
+    const isDutch = getMemberLanguage(interaction) === "nl";
+    const embed = new EmbedBuilder().setColor(purple)
+      .setTitle(isDutch ? "୨୧ Welkom bij " + guild.name : "୨୧ Welcome to " + guild.name)
       .setThumbnail(guild.iconURL({ size: 256 }))
-      .setDescription("Emi Atelier is a creative community built around Emi's creator journey, while welcoming everyone to share cosplay, art, photography and crafts. The atmosphere takes inspiration from Yae Miko and the Grand Narukami Shrine, while welcoming everyone to share cosplay, art, photography and crafts. No Genshin knowledge required.")
+      .setDescription(isDutch
+        ? "Emi Atelier is een creatieve community rond Emi's creatieve reis. Iedereen is welkom om cosplay, kunst, fotografie, handwerk en andere creatieve interesses te delen. De sfeer is geïnspireerd op Yae Miko en de Grand Narukami Shrine. Je hoeft Genshin Impact niet te kennen om erbij te horen."
+        : "Emi Atelier is a creative community built around Emi's creator journey. Everyone is welcome to share cosplay, art, photography, crafting and other creative interests. Its atmosphere takes inspiration from Yae Miko and the Grand Narukami Shrine. No Genshin knowledge required.")
       .addFields(
-        { name: "Members", value: String(guild.memberCount), inline: true },
-        { name: "Created", value: "<t:" + Math.floor(guild.createdTimestamp / 1000) + ":D>", inline: true },
-        { name: "Explore", value: "Cosplay • Art • Photography • Crafting • Community", inline: false }
+        { name: isDutch ? "Leden" : "Members", value: String(guild.memberCount), inline: true },
+        { name: isDutch ? "Opgericht" : "Created", value: "<t:" + Math.floor(guild.createdTimestamp / 1000) + ":D>", inline: true },
+        { name: isDutch ? "Ontdek" : "Explore", value: isDutch ? "Cosplay • Kunst • Fotografie • Handwerk • Community" : "Cosplay • Art • Photography • Crafting • Community", inline: false }
       ).setFooter({ text: "Emi Atelier • created by Emi ♡" });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
