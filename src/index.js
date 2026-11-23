@@ -375,7 +375,7 @@ async function ensureStartHereLinks(channel, guild, channels) {
 }
 
 async function refreshLegacyBranding(guild) {
-  const oldBrandPattern = /Atelier\\s+de\\s+Emi/gi;
+  const oldBrandPattern = /Atelier\s+de\s+Emi/gi;
   let updatedMessages = 0;
   const channels = guild.channels.cache.filter(channel =>
     [ChannelType.GuildText, ChannelType.GuildAnnouncement].includes(channel.type)
