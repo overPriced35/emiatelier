@@ -26,6 +26,10 @@ const writeConfig = (config) => {
   fs.writeFileSync(tempPath, JSON.stringify(config, null, 2));
   fs.renameSync(tempPath, configPath);
 };
+const getMemberLanguage = (interaction) =>
+  readConfig()[interaction.guildId]?.languages?.[interaction.user.id] || "en";
+const tr = (interaction, english, dutch) =>
+  getMemberLanguage(interaction) === "nl" ? dutch : english;
 const pink = 0xF4B8CF;
 const purple = 0xC9B6E4;
 
@@ -583,6 +587,9 @@ const moderationCommands = [
   new SlashCommandBuilder().setName("userinfo").setDescription("View basic information about a server member.")
     .addUserOption(o => o.setName("member").setDescription("Member to inspect").setRequired(false)),
   new SlashCommandBuilder().setName("staffhelp").setDescription("Show the Shrine Assistant staff command guide."),
+  new SlashCommandBuilder().setName("language").setDescription("Choose your personal Shrine Assistant language.")
+    .addStringOption(o => o.setName("language").setDescription("Choose English or Nederlands.")
+      .addChoices({ name: "English", value: "en" }, { name: "Nederlands", value: "nl" }).setRequired(true)),
   new SlashCommandBuilder().setName("help").setDescription("See what Shrine Assistant can help you with."),
   new SlashCommandBuilder().setName("serverinfo").setDescription("Learn about the Emi Atelier community."),
   new SlashCommandBuilder().setName("ping").setDescription("Check Shrine Assistant response and connection status."),
@@ -681,6 +688,16 @@ async function handleModerationCommand(interaction) {
   const guildData = config[interaction.guild.id] ||= {};
   guildData.warnings ||= {};
 
+  if (command === "language") {
+    const selected = interaction.options.getString("language", true);
+    guildData.languages ||= {};
+    guildData.languages[interaction.user.id] = selected;
+    writeConfig(config);
+    const confirmation = selected === "nl"
+      ? "୨୧ Je voorkeurstaal is ingesteld op **Nederlands**. Waar beschikbaar antwoordt Shrine Assistant voortaan in het Nederlands. Gebruik `/language` om later terug te schakelen naar English."
+      : "୨୧ Your language preference is now **English**. Shrine Assistant will use English for your responses. Use `/language` any time to switch to Nederlands.";
+    return interaction.reply({ content: confirmation, flags: MessageFlags.Ephemeral });
+  }
 
   if (command === "onboarding-setup") {
     const callerPermissions = interaction.memberPermissions;
