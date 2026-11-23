@@ -1,6 +1,6 @@
-# Shrine Assistant — Atelier de Emi
+# Shrine Assistant — Emi Atelier
 
-Shrine Assistant is the Discord bot for **Atelier de Emi**, a creator community for cosplay, art, photography, crafting and other creative interests. The server's atmosphere is inspired by Yae Miko and the Grand Narukami Shrine, but no Genshin Impact knowledge is needed to join.
+Shrine Assistant is the Discord bot for **Emi Atelier**, a creator community for cosplay, art, photography, crafting and other creative interests. The server's atmosphere is inspired by Yae Miko and the Grand Narukami Shrine, but no Genshin Impact knowledge is needed to join.
 
 ## What the bot does
 
