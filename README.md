@@ -7,7 +7,7 @@ Shrine Assistant is the Discord bot for **Emi Atelier**, a creator community for
 ### Server setup and onboarding
 - `/setup` creates or updates the planned server categories, channels, roles, permissions and information panels.
 - `/onboarding-setup` configures Discord's native Community Onboarding with seven default channels, creative-interest choices that assign matching roles and gallery access, and optional announcement/event notification roles. It requires Manage Server and Manage Roles for both the administrator running it and the bot.
-- `/language` lets each member choose English or Nederlands for Shrine Assistant replies. English is the default for everyone; each member's preference is saved separately in `config.json` and does not change other members' experience. Slash-command names and option descriptions remain in English.
+- `/language` lets each member choose English or Nederlands for supported personal Shrine Assistant replies and information embeds. English is the default for everyone; each member's preference is saved separately in `config.json` and does not change other members' experience. Shared server posts remain English-first, user-submitted text is not translated, and slash-command names and option descriptions remain in English.
 - `/setup` also assigns the native Community Rules channel, Community Updates and Safety Alerts channels, system welcome channel, and server description. The rules channel is `📜・rules`; Community Updates and Safety Alerts both go to the private `🔒・guuji-office`; the system channel is `🌸・welcome`.
 - `📢・announcements` is created as a native Discord Announcement channel. If an older regular text channel already has that name, `/setup` renames it to `📢・announcements-archive` to preserve its message history, then creates the native Announcement channel.
 - The **Update** option preserves existing channels and messages while creating missing items and refreshing planned permissions and bot panels.
@@ -81,7 +81,7 @@ The bot's own role does not automatically make a person staff. Staff roles are a
 ## Configuration and data
 
 - `.env` contains the bot token and Discord application/server IDs. Never commit it or share the token. If a token is exposed, reset it in the Discord Developer Portal.
-- `config.json` is created at runtime and stores server configuration, warning histories, and creator profiles. It is ignored by Git.
+- `config.json` is created at runtime and stores server configuration, warning histories, creator profiles, and per-member language preferences. It is ignored by Git.
 - Keep `config.json` on persistent storage and back it up securely. If your hosting provider uses an ephemeral filesystem, the bot's saved warning and profile data may be lost when the service restarts or redeploys.
 - The bot currently uses a local JSON file rather than an external database. Run one bot instance per server data directory to avoid concurrent writes.
 
