@@ -904,17 +904,20 @@ async function handleModerationCommand(interaction) {
   if (command === "profile-view") {
     const targetUser = interaction.options.getUser("member") || interaction.user;
     const profile = readConfig()[interaction.guild.id]?.profiles?.[targetUser.id];
-    if (!profile) return interaction.reply({ content: targetUser.id === interaction.user.id ? "You haven't created a profile yet. Use /profile-set to introduce your creative work." : "That member hasn't created a creator profile yet.", flags: MessageFlags.Ephemeral });
-    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Creator profile")
+    if (!profile) return interaction.reply({ content: targetUser.id === interaction.user.id
+      ? tr(interaction, "You haven't created a profile yet. Use /profile-set to introduce your creative work.", "Je hebt nog geen profiel aangemaakt. Gebruik /profile-set om je creatieve werk voor te stellen.")
+      : tr(interaction, "That member hasn't created a creator profile yet.", "Dit lid heeft nog geen makersprofiel aangemaakt."), flags: MessageFlags.Ephemeral });
+    const isDutch = getMemberLanguage(interaction) === "nl";
+    const embed = new EmbedBuilder().setColor(pink).setTitle(isDutch ? "୨୧ Makersprofiel" : "୨୧ Creator profile")
       .setDescription(profile.about)
       .setThumbnail(targetUser.displayAvatarURL({ size: 256 }))
       .addFields(
-        { name: "Creator", value: targetUser.toString(), inline: true },
-        { name: "Creative interests", value: profile.interests, inline: true }
+        { name: isDutch ? "Maker" : "Creator", value: targetUser.toString(), inline: true },
+        { name: isDutch ? "Creatieve interesses" : "Creative interests", value: profile.interests, inline: true }
       )
       .setFooter({ text: "Emi Atelier • every creator has a story ♡" });
-    if (profile.lookingFor) embed.addFields({ name: "Open to", value: profile.lookingFor, inline: false });
-    if (profile.portfolio) embed.addFields({ name: "Portfolio / socials", value: "[Visit link](" + profile.portfolio + ")", inline: false });
+    if (profile.lookingFor) embed.addFields({ name: isDutch ? "Op zoek naar" : "Open to", value: profile.lookingFor, inline: false });
+    if (profile.portfolio) embed.addFields({ name: isDutch ? "Portfolio / socials" : "Portfolio / socials", value: "[" + (isDutch ? "Bekijk link" : "Visit link") + "](" + profile.portfolio + ")", inline: false });
     return interaction.reply({ embeds: [embed] });
   }
 
@@ -923,7 +926,7 @@ async function handleModerationCommand(interaction) {
     const sorted = Object.entries(profiles).sort((a, b) =>
       new Date(b[1].updatedAt || 0).getTime() - new Date(a[1].updatedAt || 0).getTime()
     );
-    if (!sorted.length) return interaction.reply({ content: "No creator profiles have been shared yet. Be the first with /profile-set!", flags: MessageFlags.Ephemeral });
+    if (!sorted.length) return interaction.reply({ content: tr(interaction, "No creator profiles have been shared yet. Be the first with /profile-set!", "Er zijn nog geen makersprofielen gedeeld. Wees de eerste met /profile-set!"), flags: MessageFlags.Ephemeral });
     const page = interaction.options.getInteger("page") || 1;
     const pageSize = 10;
     const pageEntries = sorted.slice((page - 1) * pageSize, page * pageSize);
@@ -939,7 +942,7 @@ async function handleModerationCommand(interaction) {
     }
     if (!lines.length) return interaction.reply({ content: "There are no currently available creator profiles on this page.", flags: MessageFlags.Ephemeral });
     const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
-    const embed = new EmbedBuilder().setColor(purple).setTitle("୨୧ Meet the creators of Emi Atelier")
+    const embed = new EmbedBuilder().setColor(purple).setTitle(getMemberLanguage(interaction) === "nl" ? "୨୧ Ontmoet de makers van Emi Atelier" : "୨୧ Meet the creators of Emi Atelier")
       .setDescription(lines.join("\n\n"))
       .setFooter({ text: "Page " + page + " of " + totalPages + " • " + sorted.length + " shared profiles • use /creators page:N to browse ♡" });
     return interaction.reply({ embeds: [embed] });
@@ -1022,13 +1025,13 @@ async function handleModerationCommand(interaction) {
       .filter(event => event.scheduledStartTimestamp > Date.now())
       .sort((a, b) => a.scheduledStartTimestamp - b.scheduledStartTimestamp)
       .slice(0, 10);
-    if (!upcoming.length) return interaction.reply({ content: "There are no upcoming community events scheduled yet. Keep an eye on 📢・announcements!", flags: MessageFlags.Ephemeral });
-    const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ Upcoming at Emi Atelier")
+    if (!upcoming.length) return interaction.reply({ content: tr(interaction, "There are no upcoming community events scheduled yet. Keep an eye on 📢・announcements!", "Er staan nog geen community-evenementen gepland. Houd 📢・announcements in de gaten!"), flags: MessageFlags.Ephemeral });
+    const embed = new EmbedBuilder().setColor(pink).setTitle(getMemberLanguage(interaction) === "nl" ? "୨୧ Binnenkort bij Emi Atelier" : "୨୧ Upcoming at Emi Atelier")
       .setDescription(upcoming.map(event =>
         "**" + event.name + "**\n<t:" + Math.floor(event.scheduledStartTimestamp / 1000) + ":F> • " +
         (event.entityMetadata?.location || "Location to be announced") + "\n[View event](" + event.url + ") • ID: `" + event.id + "`"
       ).join("\n\n"))
-      .setFooter({ text: "Open an event to mark yourself as interested ♡" });
+      .setFooter({ text: tr(interaction, "Open an event to mark yourself as interested ♡", "Open een evenement om aan te geven dat je geïnteresseerd bent ♡") });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
