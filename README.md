@@ -7,13 +7,14 @@ Shrine Assistant is the Discord bot for **Emi Atelier**, a creator community for
 ### Server setup and onboarding
 - `/setup` creates or updates the planned server categories, channels, roles, permissions and information panels.
 - `/onboarding-setup` configures Discord's native Community Onboarding with seven default channels, creative-interest choices that assign matching roles and gallery access, and optional announcement/event notification roles. It requires Manage Server and Manage Roles for both the administrator running it and the bot.
+- `/language` lets each member choose English or Nederlands for Shrine Assistant replies. English is the default for everyone; each member's preference is saved separately in `config.json` and does not change other members' experience. Slash-command names and option descriptions remain in English.
 - `/setup` also assigns the native Community Rules channel, Community Updates and Safety Alerts channels, system welcome channel, and server description. The rules channel is `📜・rules`; Community Updates and Safety Alerts both go to the private `🔒・guuji-office`; the system channel is `🌸・welcome`.
 - `📢・announcements` is created as a native Discord Announcement channel. If an older regular text channel already has that name, `/setup` renames it to `📢・announcements-archive` to preserve its message history, then creates the native Announcement channel.
 - The **Update** option preserves existing channels and messages while creating missing items and refreshing planned permissions and bot panels.
 - The **Fresh reset** option is destructive: it deletes server channels and categories and most non-managed roles before rebuilding the layout. Do not use it unless you intentionally want to wipe existing server content.
 - New members receive the `✨・Shrine Visitor` role and a welcome message.
 - Discord's native onboarding is the primary newcomer flow; the role panel in `🎭・choose-roles` remains available for changing preferences later.
-- The start-here guide links members to rules, introductions and the gallery.
+- The start-here guide links members to rules, introductions and the gallery. English is the primary language for shared server content; members can switch their personal Shrine Assistant replies to Dutch with `/language`.
 
 ### Creator community
 - Creator profiles: `/profile-set`, `/profile-view`, `/profile-clear`, and paginated `/creators`.
@@ -95,6 +96,6 @@ The bot's own role does not automatically make a person staff. Staff roles are a
 
 ## Available slash commands
 
-`/setup`, `/onboarding-setup`, `/help`, `/serverinfo`, `/ping`, `/userinfo`, `/suggest`, `/report`, `/bug-report`, `/feedback`, `/icebreaker`, `/event-create`, `/events`, `/event-cancel`, `/prompt`, `/emi-update`, `/project-update`, `/feedback-request`, `/kudos`, `/profile-set`, `/profile-view`, `/profile-clear`, `/creators`, `/spotlight`, `/warn`, `/warnings`, `/clearwarnings`, `/timeout`, `/untimeout`, `/kick`, `/ban`, `/clear`, `/lock`, `/unlock`, `/slowmode`, and `/staffhelp`.
+`/setup`, `/onboarding-setup`, `/language`, `/help`, `/serverinfo`, `/ping`, `/userinfo`, `/suggest`, `/report`, `/bug-report`, `/feedback`, `/icebreaker`, `/event-create`, `/events`, `/event-cancel`, `/prompt`, `/emi-update`, `/project-update`, `/feedback-request`, `/kudos`, `/profile-set`, `/profile-view`, `/profile-clear`, `/creators`, `/spotlight`, `/warn`, `/warnings`, `/clearwarnings`, `/timeout`, `/untimeout`, `/kick`, `/ban`, `/clear`, `/lock`, `/unlock`, `/slowmode`, and `/staffhelp`.
 
 Some commands are restricted by Discord permissions or server ownership. Use `/help` for member-facing guidance and `/staffhelp` for the internal staff guide.
