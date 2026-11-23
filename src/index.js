@@ -1602,36 +1602,76 @@ client.on("interactionCreate", async (interaction) => {
   });
 });
 
-client.on("guildMemberAdd", async (member) => {
-  const communityRole = member.guild.roles.cache.find((role) => role.name === "✨・Shrine Visitor");
-  if (communityRole && communityRole.editable) {
-    await member.roles.add(communityRole, "Automatic community member role on joining").catch(console.error);
+function hasCompletedDiscordOnboarding(member) {
+  // GuildMemberFlags.CompletedOnboarding is bit 1 (value 2) in Discord's member flags.
+  return Boolean(member.flags?.bitfield & 2);
+}
+
+async function assignShrineVisitorAfterOnboarding(member) {
+  if (!hasCompletedDiscordOnboarding(member)) return false;
+  const role = member.guild.roles.cache.find(item => item.name === "✨・Shrine Visitor")
+    || (await member.guild.roles.fetch()).find(item => item.name === "✨・Shrine Visitor");
+  if (!role) {
+    console.warn("Could not assign Shrine Visitor to " + member.user.tag + ": role is missing.");
+    return false;
   }
+  if (member.roles.cache.has(role.id)) return true;
+  if (!role.editable) {
+    console.warn("Could not assign Shrine Visitor to " + member.user.tag + ": move the Shrine Assistant bot role above it.");
+    return false;
+  }
+  await member.roles.add(role, "Member completed Discord onboarding");
+  console.log("Assigned Shrine Visitor to " + member.user.tag + " after Discord onboarding.");
+  return true;
+}
+
+async function sendMemberLifecycleEmbed(member, type) {
   const channelId = readConfig()[member.guild.id]?.welcomeChannelId;
   if (!channelId) return;
   const channel = await member.guild.channels.fetch(channelId).catch(() => null);
-  if (!channel || !channel.isTextBased()) return;
+  if (!channel || !channel.isTextBased() || !channel.send) return;
+
+  const joined = type === "join";
   const embed = new EmbedBuilder()
-    .setColor(pink)
-    .setTitle("୨୧ A new guest has arrived!")
-    .setDescription("Welcome " + member.toString() + " to **" + member.guild.name + "**! Make yourself at home ♡")
+    .setColor(joined ? pink : purple)
+    .setTitle(joined ? "୨୧ A new creator has arrived!" : "୨୧ A member has left the shrine")
+    .setDescription(joined
+      ? "Please give " + member.toString() + " a warm welcome to **Emi Atelier**! ♡\n\nOur little creative home is open to cosplay, art, photography, crafting and every kind of creative curiosity. Once Discord's welcome steps are complete, Shrine Assistant will add the **✨ Shrine Visitor** role automatically.\n\nNew here? Start with 🌱・start-here, read 📜・rules, and say hello in 🎀・introductions. No Genshin knowledge required — just bring yourself and your creativity!"
+      : "**" + member.user.username + "** has left Emi Atelier. Thank you for being part of our community, even if only for a little while. We wish you well on your next creative adventure. ♡")
     .setThumbnail(member.user.displayAvatarURL({ size: 256 }))
-    .setFooter({ text: "Emi Atelier • made with love" })
+    .setFooter({ text: joined ? "Emi Atelier • every creator is welcome ♡" : "Emi Atelier • wishing you well ♡" })
     .setTimestamp();
-  await channel.send({ embeds: [embed] }).catch(console.error);
+  await channel.send({ embeds: [embed], allowedMentions: joined ? { users: [member.id] } : { parse: [] } });
+}
+
+client.on("guildMemberAdd", async (member) => {
+  try {
+    // Some members may already have completed onboarding when the add event is handled.
+    await assignShrineVisitorAfterOnboarding(member);
+    await sendMemberLifecycleEmbed(member, "join");
+  } catch (error) {
+    console.error("Could not complete join workflow for " + member.user.tag + ":", error);
+  }
+});
+
+client.on("guildMemberUpdate", async (oldMember, newMember) => {
+  try {
+    // Discord sets CompletedOnboarding when the member finishes native onboarding.
+    // Check the current state as well as the transition so a missed gateway update can recover.
+    if (hasCompletedDiscordOnboarding(newMember) && !newMember.roles.cache.some(role => role.name === "✨・Shrine Visitor")) {
+      await assignShrineVisitorAfterOnboarding(newMember);
+    }
+  } catch (error) {
+    console.error("Could not assign Shrine Visitor after onboarding for " + newMember.user.tag + ":", error);
+  }
 });
 
 client.on("guildMemberRemove", async (member) => {
-  const channelId = readConfig()[member.guild.id]?.welcomeChannelId;
-  if (!channelId) return;
-  const channel = await member.guild.channels.fetch(channelId).catch(() => null);
-  if (!channel || !channel.isTextBased()) return;
-  const embed = new EmbedBuilder()
-    .setColor(purple)
-    .setTitle("୨୧ A guest has left the shrine")
-    .setDescription("**" + member.user.username + "** has left us. Wishing them well ♡")
-    .setTimestamp();
-  await channel.send({ embeds: [embed] }).catch(console.error);
+  try {
+    await sendMemberLifecycleEmbed(member, "leave");
+  } catch (error) {
+    console.error("Could not send farewell embed for " + member.user.tag + ":", error);
+  }
 });
 
 client.login(DISCORD_TOKEN);
