@@ -12,7 +12,8 @@ Shrine Assistant is the Discord bot for **Emi Atelier**, a creator community for
 - `📢・announcements` is created as a native Discord Announcement channel. If an older regular text channel already has that name, `/setup` renames it to `📢・announcements-archive` to preserve its message history, then creates the native Announcement channel.
 - The **Update** option preserves existing channels and messages while creating missing items and refreshing planned permissions and bot panels. It also refreshes legacy `Atelier de Emi` branding in the bot's 100 most recent messages per text and announcement channel, without editing member-authored messages.
 - The **Fresh reset** option is destructive: it deletes server channels and categories and most non-managed roles before rebuilding the layout. Do not use it unless you intentionally want to wipe existing server content.
-- New members receive the `✨・Shrine Visitor` role and a welcome message.
+- New members receive a custom welcome embed in `🌸・welcome`; departures receive a matching farewell embed in the same channel.
+- Shrine Assistant assigns `✨・Shrine Visitor` only after Discord marks the member as having completed native onboarding (`CompletedOnboarding`). It checks the member-update event and does not grant the role immediately on join. The bot needs Manage Roles, and its role must sit above `✨・Shrine Visitor`.
 - Discord's native onboarding is the primary newcomer flow; the role panel in `🎭・choose-roles` remains available for changing preferences later.
 - The start-here guide links members to rules, introductions and the gallery. English is the primary language for shared server content; members can switch their personal Shrine Assistant replies to Dutch with `/language`.
 
