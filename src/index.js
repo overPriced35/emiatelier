@@ -835,7 +835,7 @@ async function handleModerationCommand(interaction) {
       .setTimestamp();
     if (link) embed.addFields({ name: "Project link", value: "[Take a look](" + link + ")" });
     await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
-    return interaction.reply({ content: "୨୧ Your project update has been shared in 💬・gallery-chat!", flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: tr(interaction, "୨୧ Your project update has been shared in 💬・gallery-chat!", "୨୧ Je projectupdate is gedeeld in 💬・gallery-chat!"), flags: MessageFlags.Ephemeral });
   }
 
   if (command === "feedback-request") {
@@ -857,7 +857,7 @@ async function handleModerationCommand(interaction) {
       .setTimestamp();
     if (link) embed.addFields({ name: "View the project", value: "[Take a look](" + link + ")" });
     await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
-    return interaction.reply({ content: "୨୧ Your feedback request has been shared in 💬・gallery-chat!", flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: tr(interaction, "୨୧ Your feedback request has been shared in 💬・gallery-chat!", "୨୧ Je feedbackverzoek is gedeeld in 💬・gallery-chat!"), flags: MessageFlags.Ephemeral });
   }
 
   if (command === "kudos") {
@@ -877,7 +877,7 @@ async function handleModerationCommand(interaction) {
       .setFooter({ text: "Emi Atelier • kindness looks good on everyone ♡" })
       .setTimestamp();
     await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
-    return interaction.reply({ content: "୨୧ Your kudos have been shared in 🌟・creator-spotlights!", flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: tr(interaction, "୨୧ Your kudos have been shared in 🌟・creator-spotlights!", "୨୧ Je waardering is gedeeld in 🌟・creator-spotlights!"), flags: MessageFlags.Ephemeral });
   }
 
   if (command === "profile-set") {
@@ -898,7 +898,7 @@ async function handleModerationCommand(interaction) {
       updatedAt: new Date().toISOString()
     };
     writeConfig(config);
-    return interaction.reply({ content: "୨୧ Your creator profile has been saved! Use /profile-view to preview it. You can update it any time with /profile-set or remove it with /profile-clear.", flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: tr(interaction, "୨୧ Your creator profile has been saved! Use /profile-view to preview it. You can update it any time with /profile-set or remove it with /profile-clear.", "୨୧ Je makersprofiel is opgeslagen! Gebruik /profile-view om het te bekijken. Je kunt het altijd aanpassen met /profile-set of verwijderen met /profile-clear."), flags: MessageFlags.Ephemeral });
   }
 
   if (command === "profile-view") {
@@ -950,7 +950,7 @@ async function handleModerationCommand(interaction) {
     if (!profiles[interaction.user.id]) return interaction.reply({ content: "You don't have a creator profile to remove.", flags: MessageFlags.Ephemeral });
     delete profiles[interaction.user.id];
     writeConfig(config);
-    return interaction.reply({ content: "୨୧ Your creator profile has been deleted.", flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: tr(interaction, "୨୧ Your creator profile has been deleted.", "୨୧ Je makersprofiel is verwijderd."), flags: MessageFlags.Ephemeral });
   }
 
   if (command === "spotlight") {
@@ -1101,7 +1101,7 @@ async function handleModerationCommand(interaction) {
     const suggestionMessage = await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
     await suggestionMessage.react("👍").catch(() => {});
     await suggestionMessage.react("👎").catch(() => {});
-    return interaction.reply({ content: "Thank you! Your idea has been shared in 💡・suggestions. Members can react with 👍 or 👎 to give feedback.", flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: tr(interaction, "Thank you! Your idea has been shared in 💡・suggestions. Members can react with 👍 or 👎 to give feedback.", "Bedankt! Je idee is gedeeld in 💡・suggestions. Leden kunnen met 👍 of 👎 reageren."), flags: MessageFlags.Ephemeral });
   }
 
   if (command === "icebreaker") {
@@ -1120,7 +1120,7 @@ async function handleModerationCommand(interaction) {
     if (!channel) return interaction.reply({ content: "The community chat is not set up yet. Ask an admin to run /setup.", flags: MessageFlags.Ephemeral });
     const embed = new EmbedBuilder().setColor(pink).setTitle("୨୧ A little conversation starter").setDescription(prompt).setFooter({ text: "Emi Atelier • join in whenever you like ♡" });
     await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
-    return interaction.reply({ content: "A conversation starter has been posted in 💬・general!", flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: tr(interaction, "A conversation starter has been posted in 💬・general!", "Er is een gespreksstarter geplaatst in 💬・general!"), flags: MessageFlags.Ephemeral });
   }
 
   if (command === "bug-report" || command === "feedback") {
@@ -1156,8 +1156,8 @@ async function handleModerationCommand(interaction) {
     await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
     return interaction.reply({
       content: command === "bug-report"
-        ? "Thank you! Your bug report has been sent privately to the shrine team."
-        : "Thank you! Your feedback has been sent privately to the shrine team.",
+        ? tr(interaction, "Thank you! Your bug report has been sent privately to the shrine team.", "Bedankt! Je bugmelding is privé naar het team gestuurd.")
+        : tr(interaction, "Thank you! Your feedback has been sent privately to the shrine team.", "Bedankt! Je feedback is privé naar het team gestuurd."),
       flags: MessageFlags.Ephemeral
     });
   }
@@ -1172,7 +1172,7 @@ async function handleModerationCommand(interaction) {
         { name: "Where", value: interaction.channel ? interaction.channel.toString() : "Not available" }
       ).setTimestamp();
     await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
-    return interaction.reply({ content: "Your report has been sent privately to the shrine staff. Thank you for letting us know.", flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: tr(interaction, "Your report has been sent privately to the shrine staff. Thank you for letting us know.", "Je melding is privé naar het team gestuurd. Bedankt dat je het laat weten."), flags: MessageFlags.Ephemeral });
   }
 
   if (command === "staffhelp") {
