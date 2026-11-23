@@ -1453,20 +1453,20 @@ client.on("interactionCreate", async (interaction) => {
     if (!choice || !interaction.inGuild()) return;
     const role = interaction.guild.roles.cache.find((item) => item.name === choice.role);
     if (!role) {
-      return interaction.reply({ content: "That role isn't available yet. Please ask a moderator to run /setup.", flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: tr(interaction, "That role isn't available yet. Please ask a moderator to run /setup.", "Deze rol is nog niet beschikbaar. Vraag een moderator om /setup uit te voeren."), flags: MessageFlags.Ephemeral });
     }
     if (!role.editable) {
-      return interaction.reply({ content: "I can't manage that role yet. Please ask an admin to move my bot role above the self-assignable roles.", flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: tr(interaction, "I can't manage that role yet. Please ask an admin to move my bot role above the self-assignable roles.", "Ik kan deze rol nog niet beheren. Vraag een beheerder om de botrol boven de zelf toewijsbare rollen te plaatsen."), flags: MessageFlags.Ephemeral });
     }
     const member = await interaction.guild.members.fetch(interaction.user.id);
     const hasRole = member.roles.cache.has(role.id);
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (hasRole) {
       await member.roles.remove(role, "Member used the self-role panel");
-      await interaction.editReply("୨୧ Removed **" + role.name + "** from your roles.");
+      await interaction.editReply(tr(interaction, "୨୧ Removed **" + role.name + "** from your roles.", "୨୧ **" + role.name + "** is van je rollen verwijderd."));
     } else {
       await member.roles.add(role, "Member used the self-role panel");
-      await interaction.editReply("୨୧ Added **" + role.name + "** to your roles!");
+      await interaction.editReply(tr(interaction, "୨୧ Added **" + role.name + "** to your roles!", "୨୧ **" + role.name + "** is aan je rollen toegevoegd!"));
     }
     return;
   }
@@ -1521,7 +1521,7 @@ client.on("interactionCreate", async (interaction) => {
       allowedMentions: { users: [interaction.user.id], roles: staffRoles.map(role => role.id) }
     });
     await sendModerationLog(guild, "୨୧ Support conversation opened", "**Channel:** " + channel.toString() + "\n**Opened by:** " + interaction.user.toString() + "\n**Category:** " + kind);
-    return interaction.editReply("୨୧ Your private support conversation is ready: " + channel.toString());
+    return interaction.editReply(tr(interaction, "୨୧ Your private support conversation is ready: " + channel.toString(), "୨୧ Je privégesprek met het team is klaar: " + channel.toString()));
     } catch (error) {
       console.error("Could not create support ticket:", error);
       return interaction.editReply("I could not open your support conversation just now. Please try again or contact a shrine staff member.").catch(() => {});
